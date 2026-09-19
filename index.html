@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cola Cero, simulador de RUP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Tokens: cartulina de ticket, tinta de imprenta, tinta de sello ---------- */
+:root{
+  --p1:#F2D675; --p2:#A9CFE6; --p3:#F1B5C0; --p4:#A6D9C3;
+  --tinta:#1D1947; --tinta2:#47426F; --sello:#4330B0; --rojo:#A32010;
+  --velo:rgba(29,25,71,.08); --velo2:rgba(29,25,71,.18); --hueco:rgba(29,25,71,.55);
+  --mezcla:multiply;
+  --display:"Bricolage Grotesque","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  --serif:"Literata",Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --p1:#453608; --p2:#0E3145; --p3:#45202A; --p4:#0E392C;
+    --tinta:#F5F0DD; --tinta2:#CBC5B0; --sello:#B7ABFF; --rojo:#FF9483;
+    --velo:rgba(245,240,221,.08); --velo2:rgba(245,240,221,.2); --hueco:rgba(0,0,0,.6);
+    --mezcla:normal;
+  }
+}
+:root[data-theme="dark"]{
+  --p1:#453608; --p2:#0E3145; --p3:#45202A; --p4:#0E392C;
+  --tinta:#F5F0DD; --tinta2:#CBC5B0; --sello:#B7ABFF; --rojo:#FF9483;
+  --velo:rgba(245,240,221,.08); --velo2:rgba(245,240,221,.2); --hueco:rgba(0,0,0,.6);
+  --mezcla:normal;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  --papel:var(--p1);
+  margin:0; min-height:100vh; min-height:100dvh;
+  background:var(--papel); color:var(--tinta);
+  font-family:var(--serif); font-size:17px; line-height:1.6;
+  display:grid; grid-template-columns:292px minmax(0,1fr);
+  overflow-x:hidden;
+}
+body[data-fase="2"]{--papel:var(--p2)}
+body[data-fase="3"]{--papel:var(--p3)}
+body[data-fase="4"]{--papel:var(--p4)}
+
+/* grano de cartulina */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:60;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.16; mix-blend-mode:multiply;
+}
+
+/* ---------- Talón: los tres indicadores y los cuatro hitos ---------- */
+.talon{
+  position:sticky; top:0; height:100vh; height:100dvh;
+  padding:28px 30px 26px 28px;
+  display:flex; flex-direction:column; gap:22px;
+  background:var(--papel);
+}
+.talon::after{ /* perforación */
+  content:""; position:absolute; top:0; bottom:0; right:-6px; width:12px;
+  background:radial-gradient(circle at center,var(--hueco) 0 3px,transparent 3.6px) center top/12px 17px repeat-y;
+}
+.marca{display:flex; flex-direction:column; line-height:1.1}
+.marca strong{font-family:var(--display); font-stretch:78%; font-weight:800; font-size:30px; letter-spacing:-.01em}
+.serie{font-family:var(--display); font-weight:700; color:var(--rojo); font-size:15px; letter-spacing:.06em; font-variant-numeric:tabular-nums}
+.indic{margin:0; display:flex; flex-direction:column; gap:18px}
+.ind dt{font-family:var(--display); font-weight:600; font-size:14.5px; color:var(--tinta2)}
+.ind dd{margin:0; font-family:var(--display); font-stretch:80%; font-weight:800; font-size:34px; line-height:1.05; letter-spacing:-.01em; font-variant-numeric:tabular-nums; white-space:nowrap}
+.ind dd small{font-size:15px; font-weight:600; font-stretch:100%; color:var(--tinta2); margin-left:6px; letter-spacing:0}
+.ind.rojo dd{color:var(--rojo)}
+.barra{height:7px; margin-top:7px; background:var(--velo2); position:relative}
+.barra i{position:absolute; inset:0 auto 0 0; width:0; background:var(--tinta); transition:width .7s cubic-bezier(.3,.7,.2,1)}
+.ind.rojo .barra i{background:var(--rojo)}
+.hitos{list-style:none; margin:auto 0 0; padding:0; display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
+.hitos li{
+  aspect-ratio:1; border-radius:50%; border:2px dashed var(--hueco);
+  display:grid; place-items:center;
+  font-family:var(--display); font-weight:800; font-size:14px; letter-spacing:.04em; color:var(--tinta2);
+}
+.hitos li.ok,.hitos li.mal,.hitos li.nogo{border-style:double; border-width:5px; transform:rotate(-9deg); mix-blend-mode:var(--mezcla)}
+.hitos li.ok{border-color:var(--sello); color:var(--sello)}
+.hitos li.mal,.hitos li.nogo{border-color:var(--rojo); color:var(--rojo)}
+.hitos li.nogo.bien{border-color:var(--sello); color:var(--sello)}
+.hitos-titulo{font-family:var(--display); font-weight:600; font-size:14.5px; color:var(--tinta2); margin:0 0 8px}
+
+/* ---------- Cuerpo del ticket ---------- */
+main{padding:clamp(22px,5vh,52px) clamp(20px,5vw,76px) 64px; max-width:860px; min-width:0}
+main:focus{outline:none}
+h1,h2,h3{font-family:var(--display); font-weight:800; margin:0}
+h1:focus{outline:none}
+.meta{display:flex; justify-content:space-between; gap:16px; align-items:baseline; font-family:var(--display); font-weight:600; font-size:15.5px; color:var(--tinta2); margin-bottom:14px}
+.meta .serie{font-size:16px}
+h1{font-stretch:80%; font-size:clamp(30px,4.3vw,48px); line-height:1.02; letter-spacing:-.015em; margin-bottom:16px; max-width:18em}
+p{margin:0 0 14px; max-width:40em}
+.chico{font-size:15px; color:var(--tinta2)}
+
+.boton{
+  appearance:none; border:0; cursor:pointer;
+  background:var(--tinta); color:var(--papel);
+  font-family:var(--display); font-weight:700; font-size:18px; letter-spacing:.005em;
+  padding:14px 26px; border-radius:3px; margin-top:10px;
+  transition:transform .12s;
+}
+@media (hover:hover){.boton:hover{transform:translateY(-2px)}}
+.boton:active{transform:translateY(1px)}
+.boton.linea{background:transparent; color:var(--tinta); box-shadow:inset 0 0 0 2px var(--tinta)}
+:focus-visible{outline:3px solid var(--sello); outline-offset:3px}
+
+/* Portada */
+.vale{font-family:var(--display); font-weight:600; font-size:17px; color:var(--tinta2); margin:0 0 2px}
+.titular{font-stretch:75%; font-size:clamp(64px,11.5vw,150px); line-height:.86; letter-spacing:-.03em; margin:0 0 22px -.04em; max-width:none}
+.tira{display:grid; grid-template-columns:repeat(4,1fr); margin:20px 0 18px; border:2px solid var(--tinta); max-width:620px}
+.tira div{min-width:0; padding:8px 10px 9px; font-family:var(--display); line-height:1.15; border-left:2px dotted var(--tinta)}
+.tira div:first-child{border-left:0}
+.tira b{display:block; font-weight:800; font-size:15.5px}
+.tira span{font-size:13.5px; font-weight:600; color:var(--tinta2)}
+.tira .f1{background:var(--p1)} .tira .f2{background:var(--p2)} .tira .f3{background:var(--p3)} .tira .f4{background:var(--p4)}
+
+/* Entrada de fase */
+.fase-nombre{font-stretch:75%; font-size:clamp(50px,9vw,112px); line-height:.9; letter-spacing:-.03em; margin:0 0 12px -.03em; max-width:none}
+.fase-pregunta{font-size:20px; font-style:italic; margin-bottom:4px}
+.disc{margin:20px 0 8px; max-width:600px; display:grid; gap:5px}
+.disc div{display:grid; grid-template-columns:190px 1fr; align-items:center; gap:12px; font-family:var(--display); font-size:14.5px; font-weight:600; line-height:1.15}
+.disc .pista{height:11px; background:var(--velo); position:relative}
+.disc .pista i{position:absolute; inset:0 auto 0 0; background:var(--tinta); transition:width 1s cubic-bezier(.4,.1,.2,1)}
+
+/* Opciones: cupones recortables */
+.cupones{list-style:none; padding:0; margin:22px 0 0; border-bottom:2px dashed var(--hueco)}
+.cupon{
+  appearance:none; width:100%; text-align:left; cursor:pointer; color:inherit; background:transparent;
+  border:0; border-top:2px dashed var(--hueco);
+  padding:16px 12px 17px 0; display:grid; grid-template-columns:1fr auto; gap:6px 24px; align-items:start;
+  font:inherit; transition:padding-left .15s, background-color .15s;
+}
+@media (hover:hover){.cupon:hover{background:var(--velo); padding-left:14px}}
+.cupon:focus-visible{background:var(--velo); padding-left:14px}
+.cupon b{font-family:var(--display); font-weight:800; font-stretch:88%; font-size:22px; line-height:1.15; display:block; margin-bottom:4px}
+.cupon span.texto{display:block; font-size:16px; line-height:1.5; max-width:36em}
+.precio .sep{display:none}
+.precio{font-family:var(--display); font-weight:700; font-size:16px; line-height:1.3; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; padding-top:3px}
+
+/* Hito: criterios y sellos */
+.sub-hito{font-family:var(--display); font-weight:600; font-size:18px; margin:-8px 0 0}
+.criterios{list-style:none; padding:0; margin:14px 0 6px; max-width:640px}
+.criterios li{display:grid; grid-template-columns:26px 1fr; gap:12px; padding:7px 0; border-top:1px solid var(--velo2); line-height:1.4}
+.criterios li:last-child{border-bottom:1px solid var(--velo2)}
+.marca-c{width:24px; height:24px; border:2px solid var(--tinta); display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:18px; line-height:1; margin-top:1px}
+.criterios li.no .marca-c{color:var(--rojo); border-color:var(--rojo)}
+.criterios li.si .marca-c{color:var(--sello); border-color:var(--sello)}
+.criterios em{display:block; font-size:15px; color:var(--tinta2)}
+.criterios li.no em{color:var(--rojo)}
+.presion{border-left:5px solid var(--tinta); padding:1px 0 1px 16px; margin:14px 0 0; max-width:40em; line-height:1.5}
+.sellos{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:18px}
+.sello-btn{
+  appearance:none; cursor:pointer; text-align:left; color:inherit; background:transparent; font:inherit;
+  border:3px solid var(--tinta); border-radius:8px; padding:14px 16px 15px;
+  display:flex; flex-direction:column; gap:4px; transition:background-color .15s, transform .12s;
+}
+@media (hover:hover){.sello-btn:hover{background:var(--velo); transform:rotate(-1.2deg)}}
+.sello-btn:focus-visible{background:var(--velo)}
+.sello-btn b{font-family:var(--display); font-weight:800; font-stretch:80%; font-size:30px; line-height:1}
+.sello-btn .sub{font-family:var(--display); font-weight:700; font-size:15.5px}
+.sello-btn .texto{font-size:15px; line-height:1.45; flex:1}
+.sello-btn .precio{text-align:left; font-size:15px; padding-top:6px}
+
+/* Resultado */
+.sello{
+  display:inline-flex; flex-direction:column; align-items:center; gap:2px;
+  font-family:var(--display); font-weight:800; text-transform:uppercase; text-align:center;
+  color:var(--sello); border:5px double currentColor; border-radius:12px;
+  padding:9px 20px 10px; margin:4px 0 26px 4px; transform:rotate(-7deg);
+  filter:url(#tinta); mix-blend-mode:var(--mezcla); opacity:.92;
+  animation:golpe .26s cubic-bezier(.2,1.3,.4,1) both;
+}
+.sello.rojo{color:var(--rojo)}
+.sello .a{font-stretch:75%; font-size:44px; line-height:.95; letter-spacing:.02em}
+.sello .b{font-size:15px; letter-spacing:.14em}
+.sello.grande .a{font-size:clamp(52px,8vw,84px)}
+.sello.grande .b{font-size:18px}
+.sello.grande{margin-bottom:34px}
+@keyframes golpe{from{transform:rotate(-16deg) scale(2.1); opacity:0} to{transform:rotate(-7deg) scale(1); opacity:.92}}
+.elegiste{font-family:var(--display); font-weight:600; font-size:15.5px; color:var(--tinta2); margin-bottom:6px}
+.deltas{display:flex; flex-wrap:wrap; gap:8px 10px; margin:6px 0 20px; padding:0; list-style:none; font-family:var(--display); font-weight:700; font-size:15.5px; font-variant-numeric:tabular-nums}
+.deltas li{padding:4px 11px 5px; background:var(--velo2)}
+.deltas li.malo{color:var(--rojo)}
+.rup{border-left:6px solid var(--sello); padding:4px 0 6px 18px; margin:6px 0 18px; max-width:38em}
+.rup h2{font-size:16px; font-weight:800; color:var(--sello); margin-bottom:4px}
+.rup p{margin:0; font-size:17.5px; line-height:1.5}
+
+/* Final */
+.final h2{font-stretch:85%; font-size:26px; line-height:1.1; margin:42px 0 12px}
+.cifras{display:flex; flex-wrap:wrap; gap:6px 30px; margin:16px 0 8px; padding:0; list-style:none; font-family:var(--display); font-weight:600; font-size:15px; color:var(--tinta2)}
+.cifras b{display:block; font-weight:800; font-stretch:80%; font-size:28px; line-height:1.05; color:var(--tinta)}
+.repaso{list-style:none; padding:0; margin:0; counter-reset:r}
+.repaso li{display:grid; grid-template-columns:34px 1fr; gap:10px; padding:11px 0; border-top:2px dashed var(--hueco); line-height:1.4}
+.repaso li:last-child{border-bottom:2px dashed var(--hueco)}
+.repaso .num{font-family:var(--display); font-weight:800; font-size:20px; color:var(--rojo)}
+.repaso .que{font-family:var(--display); font-weight:600; font-size:14.5px; color:var(--tinta2)}
+.repaso b{font-family:var(--display); font-weight:800; font-size:18px}
+.repaso .ver{font-family:var(--display); font-weight:800; font-size:14px; padding:1px 8px 2px; margin-left:6px; border:2px solid currentColor; border-radius:4px; white-space:nowrap}
+.ver.ok{color:var(--sello)} .ver.error{color:var(--rojo)} .ver.costo{color:var(--tinta2)}
+.repaso .linea{display:block; font-size:15.5px}
+.desliza{overflow-x:auto; max-width:100%}
+table{border-collapse:collapse; width:100%; min-width:560px; font-size:15.5px; line-height:1.4}
+th,td{text-align:left; vertical-align:top; padding:10px 14px 10px 0; border-top:1px solid var(--velo2)}
+thead th{font-family:var(--display); font-weight:700; font-size:14.5px; color:var(--tinta2); border-top:0; padding-bottom:6px}
+tbody th{font-family:var(--display); font-weight:800; font-size:17px; white-space:nowrap}
+td.hito b{font-family:var(--display); font-weight:800; font-size:20px; display:block; line-height:1.1}
+td.hito span{font-size:14px; color:var(--tinta2)}
+td.tuyo{font-family:var(--display); font-weight:700; font-size:15px}
+td.tuyo.ok{color:var(--sello)} td.tuyo.mal{color:var(--rojo)} td.tuyo.nada{color:var(--tinta2); font-weight:500}
+.calor{table-layout:fixed} .calor th:first-child{width:32%}
+.calor td{padding:7px 14px 7px 0} .calor .pista{height:10px; background:var(--velo); position:relative; min-width:70px}
+.calor .pista i{position:absolute; inset:0 auto 0 0; background:var(--tinta)}
+.calor tbody th{font-size:15px; font-weight:600; white-space:normal}
+.debate{padding-left:22px; margin:0; max-width:40em} .debate li{margin-bottom:8px}
+
+/* barrido entre fases: entra la hoja siguiente del talonario */
+.hoja{position:fixed; inset:0; z-index:40; transform:translateX(100%)}
+.hoja::before{content:""; position:absolute; top:0; bottom:0; left:-6px; width:12px; background:radial-gradient(circle at center,var(--hueco) 0 3px,transparent 3.6px) center top/12px 17px repeat-y}
+
+/* ---------- Pantallas angostas: el talón pasa arriba ---------- */
+@media (max-width:860px){
+  body{display:block; font-size:16.5px}
+  .talon{height:auto; padding:10px 16px 12px; gap:9px; z-index:20}
+  .talon::after{top:auto; bottom:-6px; left:0; right:0; width:auto; height:12px; background:radial-gradient(circle at center,var(--hueco) 0 3px,transparent 3.6px) left center/17px 12px repeat-x}
+  .marca{display:none}
+  .indic{flex-direction:row; gap:14px}
+  .ind{flex:1; min-width:0}
+  .ind dt{font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ind dd{font-size:21px}
+  .ind dd small{display:none}
+  .barra{height:5px; margin-top:4px}
+  .hitos-caja{display:flex; align-items:center; gap:10px}
+  .hitos-titulo{margin:0; font-size:12.5px}
+  .hitos{margin:0; display:flex; gap:6px}
+  .hitos li{width:34px; font-size:10.5px; border-width:1.5px}
+  .hitos li.ok,.hitos li.mal,.hitos li.nogo{border-width:4px}
+  main{padding:26px 18px 56px}
+  .sellos{grid-template-columns:1fr}
+  .sello-btn{display:grid; grid-template-columns:1fr auto; gap:2px 12px}
+  .sello-btn .texto{grid-column:1/-1}
+  .sello-btn .sub{align-self:end; text-align:right}
+  .cupon{grid-template-columns:1fr; padding-right:0}
+  .precio{text-align:left; padding-top:0}
+  .disc div{grid-template-columns:132px 1fr; font-size:13px}
+  .titular{margin-bottom:16px}
+  .tira span{display:none}
+  .tira div{padding:7px 4px 8px 6px} .tira b{font-size:12.5px}
+  .nota-boton{display:block; margin:10px 0 0 !important}
+  .precio br{display:none} .precio .sep{display:inline}
+}
+@media (max-height:720px) and (min-width:861px){
+  .talon{padding-top:20px; gap:16px} .ind dd{font-size:30px} .indic{gap:13px}
+  .titular{font-size:clamp(64px,9vw,112px)}
+  main{padding-top:20px}
+  h1{font-size:clamp(30px,3.4vw,40px); margin-bottom:12px}
+  .meta{margin-bottom:8px}
+  .criterios li{padding:5px 0}
+  .sellos{margin-top:14px}
+  .sello-btn{padding:10px 14px 11px} .sello-btn b{font-size:25px} .sello-btn .texto{font-size:14.5px; line-height:1.4}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important}
+}
+</style>
+</head>
+<body data-fase="1">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="tinta" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="4" result="r"/>
+    <feDisplacementMap in="SourceGraphic" in2="r" scale="3"/>
+  </filter>
+</svg>
+
+<aside class="talon" aria-label="Estado del proyecto">
+  <div class="marca">
+    <span class="serie">Nº 000600</span>
+    <strong>Cola Cero</strong>
+  </div>
+  <dl class="indic">
+    <div class="ind" id="i-pres"><dt>Presupuesto</dt><dd><span class="val"></span></dd><div class="barra"><i></i></div></div>
+    <div class="ind" id="i-plazo"><dt>Plazo</dt><dd><span class="val"></span></dd><div class="barra"><i></i></div></div>
+    <div class="ind" id="i-riesgo"><dt>Riesgo técnico</dt><dd><span class="val"></span><small></small></dd><div class="barra"><i></i></div></div>
+  </dl>
+  <div class="hitos-caja" style="margin-top:auto">
+    <p class="hitos-titulo">Hitos sellados</p>
+    <ol class="hitos" id="hitos">
+      <li data-h="LCO">LCO</li><li data-h="LCA">LCA</li><li data-h="IOC">IOC</li><li data-h="PR">PR</li>
+    </ol>
+  </div>
+</aside>
+
+<main id="cuerpo" tabindex="-1"></main>
+
+<script>
+(function(){
+"use strict";
+
+/* ===================== Contenido de RUP ===================== */
+var FASES = [null,
+  {nombre:"Inicio", pregunta:"¿Vale la pena hacer esto?", hito:"LCO", hitoNombre:"Objetivos del Ciclo de Vida",
+   criterio:"Los interesados coinciden en el alcance, el caso de negocio y una estimación inicial.",
+   nota:"Hasta Implementación y Pruebas asoman: una prueba de concepto también cabe en Inicio."},
+  {nombre:"Elaboración", pregunta:"¿Se puede construir, y cómo?", hito:"LCA", hitoNombre:"Arquitectura del Ciclo de Vida",
+   criterio:"Existe una línea base de arquitectura ejecutable y los riesgos mayores están mitigados.",
+   nota:"Mira Implementación: ya subió. En Elaboración se programa."},
+  {nombre:"Construcción", pregunta:"Construirlo, iteración por iteración.", hito:"IOC", hitoNombre:"Capacidad Operativa Inicial",
+   criterio:"El producto es lo bastante estable para entregarse a usuarios reales, aunque sea en beta.",
+   nota:"Requisitos no desaparece: cada iteración los ajusta."},
+  {nombre:"Transición", pregunta:"Ponerlo en manos de quienes lo usan.", hito:"PR", hitoNombre:"Lanzamiento del Producto",
+   criterio:"Los usuarios están conformes, el soporte fue transferido y el sistema anterior se retiró formalmente.",
+   nota:"Manda Despliegue, pero todavía se programa y se prueba."}
+];
+var DISC = [
+  ["Modelado del negocio",[80,50,15,5]],
+  ["Requisitos",[60,85,30,8]],
+  ["Análisis y diseño",[15,80,50,8]],
+  ["Implementación",[8,35,100,25]],
+  ["Pruebas",[6,30,75,40]],
+  ["Despliegue",[4,8,35,100]],
+  ["Gestión de configuración",[8,25,60,50]],
+  ["Gestión de proyecto",[45,40,45,35]],
+  ["Entorno",[40,35,20,8]]
+];
+var INI = {pres:200, plazo:36, riesgo:80};
+
+function nivel(r){ return r>=60 ? "alto" : (r>35 ? "medio" : "bajo"); }
+
+/* ===================== Las 7 decisiones ===================== */
+function sellos(txt, sem, mil){
+  return [
+    {id:"go", titulo:"GO", sub:"Aprobar el hito", texto:txt[0], sem:0, mil:0},
+    {id:"espera", titulo:"Todavía no", sub:"Una iteración más", texto:txt[1], sem:sem, mil:mil},
+    {id:"nogo", titulo:"NO-GO", sub:"Cancelar el proyecto", texto:txt[2], sem:0, mil:0, fin:true}
+  ];
+}
+
+var DEC = {
+
+  d1:{fase:1, corto:"cómo empezar",
+    titulo:"Tienes tres semanas y cuatro jefes",
+    contexto:function(){return [
+      "Bienestar Universitario quiere controlar el subsidio. El concesionario del comedor no quiere cambiar su rutina. La OTI pregunta quién va a mantener esto. Los delegados estudiantiles solo quieren dormir hasta las 7.",
+      "¿Por dónde empiezas?"];},
+    opciones:function(){return [
+      {id:"a", titulo:"Especificar todo antes de empezar", texto:"Un documento de requisitos completo: 86 casos de uso detallados y firmados. Nadie podrá decir que no se le preguntó.", sem:8, mil:30},
+      {id:"b", titulo:"Sentar a los cuatro en una sala", texto:"Taller de dos días para acordar qué entra y qué no, cuánto ahorra el comedor, una estimación gruesa y una lista de riesgos.", sem:3, mil:12},
+      {id:"c", titulo:"Mostrar algo que se pueda tocar", texto:"Un prototipo de las pantallas de la app para entusiasmar al vicerrectorado y asegurar respaldo.", sem:2, mil:8}
+    ];},
+    resolver:function(s,id){
+      s.d1=id;
+      if(id==="a"){ s.alineado=true;
+        return {v:"error", linea:"Ocho semanas de papel. El riesgo técnico no se movió.",
+          p:["Ocho semanas después tienes 140 páginas firmadas. El alcance quedó acordado y el caso de negocio cierra: unos S/\u00a09 000 al mes en raciones recuperadas.",
+             "Pero en la semana seis el concesionario cambió los turnos de almuerzo y once casos de uso ya no sirven. Y el riesgo técnico sigue donde estaba: nadie ha probado nada."],
+          rup:"Inicio no busca requisitos completos, sino acuerdo: alcance, caso de negocio y una estimación. El detalle llega iteración por iteración, porque los requisitos cambian."};
+      }
+      if(id==="b"){ s.alineado=true; s.riesgo-=5;
+        return {v:"ok", linea:"Acuerdo corto y suficiente.",
+          p:["Salen con un alcance de una página: reserva, QR y reporte diario. El control de subsidio por categoría queda fuera de esta versión, por escrito.",
+             "El comedor calcula que recupera unos S/\u00a09 000 al mes. Y en la pizarra quedan anotados tres riesgos que dan miedo."],
+          rup:"Inicio es corto a propósito. Su producto es que los interesados coincidan en el alcance, el caso de negocio y una estimación inicial."};
+      }
+      s.alineado=false;
+      return {v:"costo", linea:"Mucho entusiasmo, ningún acuerdo.",
+        p:["El vicerrector queda encantado con las pantallas.",
+           "Pero Bienestar sale convencida de que la app controlará el subsidio por categoría, el concesionario cree que para él nada cambia, y nadie ha estimado cuánto cuesta todo esto."],
+        rup:"Una prueba de concepto es válida en Inicio, pero no reemplaza el acuerdo. El entusiasmo no es alcance."};
+    }
+  },
+
+  g1:{fase:1, hito:"LCO", corto:"hito LCO",
+    titulo:"Hito LCO: Objetivos del Ciclo de Vida",
+    presion:"El vicerrector quiere anunciar Cola Cero este viernes, en el aniversario de la universidad. Para él, el hito es el viernes.",
+    criterios:function(s){
+      if(s.alineado) return [
+        ["si","Los interesados coinciden en el alcance", s.d1==="a" ? "Acordado, con 140 páginas de sobra." : "Una página, firmada por los cuatro."],
+        ["si","Hay caso de negocio","Unos S/\u00a09 000 al mes en raciones recuperadas."],
+        ["si","Hay una estimación inicial","Gruesa, pero todos la conocen."]];
+      return [
+        ["no","Los interesados coinciden en el alcance","Bienestar y el concesionario entienden cosas distintas."],
+        ["no","Hay caso de negocio","Nadie ha hecho la cuenta."],
+        ["no","Hay una estimación inicial","Solo hay pantallas bonitas."]];
+    },
+    opciones:function(){return sellos([
+      "El proyecto pasa a Elaboración y el viernes hay anuncio.",
+      "Otra iteración de Inicio hasta que los criterios se cumplan. Sin anuncio el viernes.",
+      "Se cierra el proyecto y se devuelve el presupuesto que queda."],3,10);},
+    resolver:function(s,id){
+      var ok=s.alineado;
+      if(id==="go"){
+        if(ok){ s.hitos.LCO="cumple";
+          return {v:"ok", linea:"Aprobado porque los criterios se cumplían.", sello:["LCO","aprobado"],
+            p:["Sellas LCO. El viernes, el vicerrector anuncia un proyecto que todos entienden igual."],
+            rup:"El hito se aprueba porque sus criterios se cumplen. Que además coincida con la fecha es una suerte, no la razón."};}
+        s.hitos.LCO="sincumplir"; s.deudaAlcance=true;
+        return {v:"error", linea:"Aprobado por la fecha. El alcance quedó sin acordar.", sello:["LCO","aprobado"], rojo:true,
+          p:["Sellas LCO y el anuncio sale precioso.",
+             "Bienestar sigue esperando su control de subsidio por categoría. Nadie se lo ha negado, así que nadie lo ha presupuestado."],
+          rup:"Un hito es una condición, no una fecha. Aprobarlo sin cumplirlo no adelanta nada: traslada el problema a una fase donde arreglarlo cuesta más."};
+      }
+      if(id==="espera"){
+        if(!ok){ s.alineado=true; s.riesgo-=5; s.hitos.LCO="frenado";
+          return {v:"ok", linea:"Frenaste hasta cumplir los criterios.", sello:["LCO","todavía no"],
+            p:["El aniversario pasa sin tu proyecto y el vicerrector deja de saludarte en el pasillo.",
+               "Pero haces el taller que faltaba: alcance de una página, caso de negocio, estimación. Tres semanas después, ahora sí, sellas LCO."],
+            rup:"Frenar un hito cuesta semanas que se ven hoy. No frenarlo cuesta meses que todavía no se ven."};}
+        s.hitos.LCO="sobra";
+        return {v:"costo", linea:"Esperaste sin necesidad: tres semanas perdidas.", sello:["LCO","todavía no"],
+          p:["Otra ronda de reuniones. Todos repiten lo que ya habían acordado. Tres semanas después sellas exactamente el mismo LCO."],
+          rup:"Si los criterios ya se cumplen, el hito se aprueba. Esperar \"por si acaso\" también es ignorar la condición."};
+      }
+      s.hitos.LCO="nogo";
+      return {v: ok?"error":"costo", linea:"Cancelaste en el primer hito.", sello:["No-go","LCO"], rojo:true, fin:"cancelLCO",
+        p:["Cierras el proyecto antes de empezar Elaboración."],
+        rup:"Cancelar en LCO es lo más barato que existe. La pregunta es si los criterios lo pedían."};
+    }
+  },
+
+  d2:{fase:2, corto:"cómo atacar el riesgo",
+    titulo:"Tres riesgos que dan miedo",
+    contexto:function(){return [
+      "Uno: a las 6:00\u00a0am, 2 400 estudiantes intentarán reservar 600 raciones en el mismo minuto. Dos: el Wi-Fi de la puerta del comedor se cae cada vez que llueve. Tres: el padrón de matriculados vive en un sistema de la OTI de 2009, sin API.",
+      "¿A qué dedicas Elaboración?"];},
+    opciones:function(){return [
+      {id:"a", titulo:"Diseñar toda la arquitectura en UML y firmarla en comité", texto:"Modelo completo: clases, secuencia y despliegue, revisado y firmado por el comité de arquitectura de la OTI. Construcción arranca con todo decidido.", sem:6, mil:35},
+      {id:"b", titulo:"Probar solo el pico de las 6:00\u00a0am", texto:"Una prueba de concepto del riesgo que más asusta. Lo demás se resuelve durante Construcción.", sem:4, mil:22},
+      {id:"c", titulo:"Programar un esqueleto que funcione de punta a punta", texto:"Dos iteraciones: reservar, generar el QR y validarlo en la puerta, con el padrón real y carga simulada. Feo, pero ejecutable.", sem:8, mil:50}
+    ];},
+    resolver:function(s,id){
+      s.d2=id;
+      if(id==="a"){ s.riesgo-=5; s.uml=true;
+        return {v:"error", linea:"43 diagramas firmados. Riesgo casi intacto.",
+          p:["El comité firma por unanimidad 43 diagramas. El de despliegue afirma que un servidor basta para el pico de las 6:00\u00a0am.",
+             "Es una opinión: nadie ha ejecutado nada. Mira tu indicador de riesgo."],
+          rup:"El producto de Elaboración es una arquitectura ejecutable y probada. Un modelo firmado describe la apuesta; no dice si se gana."};
+      }
+      if(id==="b"){ s.riesgo-=25;
+        return {v:"costo", linea:"Un riesgo muerto, dos sin tocar.",
+          p:["La primera prueba tumba el servidor con 400 reservas simultáneas. Pasas a una cola de reservas y aguanta 3 000. Ese riesgo muere.",
+             "El Wi-Fi de la puerta y el padrón de 2009 siguen ahí, sin tocar."],
+          rup:"Atacar primero el riesgo mayor es correcto. Pero el hito pide una línea base que integre las piezas, no una prueba suelta."};
+      }
+      s.riesgo-=50; s.arq=true;
+      return {v:"ok", linea:"Software que corre y riesgos convertidos en datos.",
+        p:["Primera iteración: la prueba de carga tumba el servidor con 400 reservas simultáneas. Cambias a una cola de reservas y aguanta 3 000.",
+           "Segunda iteración: el QR se valida sin conexión y el padrón se lee con una copia nocturna. Es feo, pero corre de punta a punta."],
+        rup:"RUP es iterativo: se programa desde Elaboración. Cada iteración entrega algo ejecutable que convierte un miedo en un dato."};
+    }
+  },
+
+  g2:{fase:2, hito:"LCA", corto:"hito LCA",
+    titulo:"Hito LCA: Arquitectura del Ciclo de Vida",
+    presion:function(s){
+      var t="Los seis desarrolladores contratados para Construcción empiezan el lunes. Tenerlos esperando cuesta S/\u00a06 000 por semana.";
+      if(nivel(s.riesgo)==="alto") t+=" El viernes, una practicante prueba por su cuenta el diseño firmado: con 300 reservas simultáneas, el servidor se cae.";
+      return t;},
+    criterios:function(s){
+      var n=nivel(s.riesgo);
+      return [
+        [s.arq?"si":"no","Existe una arquitectura ejecutable", s.arq ? "Un esqueleto que corre de punta a punta." : (s.uml ? "Hay 43 diagramas firmados. Ejecutable, nada." : "Hay una prueba suelta, no una línea base.")],
+        [n==="bajo"?"si":(n==="medio"?"medio":"no"),"Los riesgos mayores están mitigados","Riesgo técnico: "+s.riesgo+"%."],
+        [n==="bajo"?"si":(n==="medio"?"medio":"no"),"El plan de Construcción es creíble", n==="bajo" ? "Se apoya en algo que ya se probó." : "Se apoya en supuestos que nadie ha probado."]];
+    },
+    opciones:function(){return sellos([
+      "El lunes arranca Construcción con el equipo completo.",
+      "Otra iteración de Elaboración para programar y probar lo que falta. El equipo nuevo espera cobrando.",
+      "Se cierra el proyecto con lo aprendido y se devuelve el presupuesto que queda."],5,30);},
+    resolver:function(s,id){
+      var n=nivel(s.riesgo);
+      s.gastoLCA=INI.pres-s.pres;
+      if(id==="go"){
+        if(n==="bajo"){ s.hitos.LCA="cumple";
+          return {v:"ok", linea:"Aprobado con evidencia ejecutable.", sello:["LCA","aprobado"],
+            p:["Sellas LCA. El equipo de Construcción recibe un esqueleto que ya corre y una lista de riesgos tachados."],
+            rup:"LCA es el hito más importante de RUP: a partir de aquí el gasto se multiplica. Por eso se aprueba con evidencia ejecutable."};}
+        s.hitos.LCA="sincumplir";
+        if(n==="medio") return {v:"error", linea:"Aprobado con riesgos abiertos.", sello:["LCA","aprobado"], rojo:true,
+          p:["Sellas LCA con dos riesgos sin tocar. \"Se resuelven en el camino\", dices. El camino tiene seis sueldos."],
+          rup:"Aprobar LCA con riesgos abiertos no los elimina: los manda a Construcción, donde cada semana cuesta seis sueldos."};
+        return {v:"error", linea:"Aprobado sobre una arquitectura que nadie vio funcionar.", sello:["LCA","aprobado"], rojo:true,
+          p:["Sellas LCA. La practicante guarda su prueba en una carpeta.",
+             "El lunes llegan seis desarrolladores a construir sobre una arquitectura que nadie ha visto funcionar."],
+          rup:"Un hito es una condición. El comité firmó, la fecha llegó y el equipo está contratado, pero nada de eso es el criterio: arquitectura ejecutable y riesgo mitigado."};
+      }
+      if(id==="espera"){
+        if(n!=="bajo"){ s.riesgo=Math.max(20,s.riesgo-35); s.arq=true; s.hitos.LCA="frenado";
+          return {v:"ok", linea:"Frenaste y programaste lo que faltaba.", sello:["LCA","todavía no"],
+            p:["Cinco semanas programando el esqueleto que faltaba. La prueba de carga lo tumba dos veces antes de aguantar.",
+               "Duele pagar un equipo que espera. Pero ahora la arquitectura corre, y sellas LCA."],
+            rup:"Una iteración más de Elaboración es cara. Descubrir lo mismo en Construcción cuesta varias veces más."};}
+        s.hitos.LCA="sobra";
+        return {v:"costo", linea:"Esperaste sin necesidad: cinco semanas y S/\u00a030 mil.", sello:["LCA","todavía no"],
+          p:["Cinco semanas puliendo una arquitectura que ya funcionaba, con seis desarrolladores cobrando por esperar. Luego sellas el mismo LCA."],
+          rup:"Si los criterios se cumplen, el hito se aprueba. La prudencia sin evidencia también cuesta."};
+      }
+      s.hitos.LCA = n==="bajo" ? "nogo" : "nogobien";
+      return {v: n==="alto"?"ok":(n==="medio"?"costo":"error"), linea: n==="alto" ? "No-go con la evidencia en la mano." : (n==="medio" ? "No-go prudente, quizá prematuro." : "Cancelaste un proyecto sano."),
+        sello:["No-go","LCA"], rojo:n==="bajo", fin:"nogoLCA-"+n,
+        p:["Presentas la evidencia al vicerrector y cierras el proyecto."],
+        rup:"El no-go es una salida prevista del hito LCA, no un accidente. Es el último punto donde cancelar es barato."};
+    }
+  },
+
+  d3:{fase:3, corto:"cómo construir",
+    titulo:"Seis desarrolladores y un comedor impaciente",
+    contexto:function(){return [
+      "Hay que construir reservas, QR, reportes diarios y el panel de Bienestar. El equipo está completo y el reloj corre.",
+      "¿Cómo organizas el trabajo?"];},
+    opciones:function(){return [
+      {id:"a", titulo:"Un módulo por pareja y se integra al final", texto:"Tres parejas en paralelo, cada una dueña de su módulo. Las últimas dos semanas se junta todo.", sem:10, mil:60},
+      {id:"b", titulo:"Iteraciones de tres semanas con el comedor probando", texto:"Cada iteración termina en una versión que funciona. El personal del comedor la usa y opina.", sem:12, mil:70},
+      {id:"c", titulo:"Iteraciones de tres semanas, puertas adentro", texto:"Versiones que funcionan cada tres semanas, pero los usuarios las ven recién al final. Menos interrupciones.", sem:11, mil:64}
+    ];},
+    resolver:function(s,id){
+      s.d3=id;
+      var n=nivel(s.riesgo), r={p:[]};
+      if(id==="a"){ s.plazo-=4; s.pres-=20; s.defectos+=2; r.v="error"; r.linea="Integración al final: cascada con otro nombre.";
+        r.p.push("Diez semanas de avance perfecto en tres tableros separados. Al juntar, el QR que genera un módulo no es el que espera el otro. La integración se come cuatro semanas y S/\u00a020 mil más.");
+        r.rup="Iterativo significa integrar en cada iteración. El \"todo al final\" es cascada con otro nombre.";
+      } else if(id==="b"){ r.v="ok"; r.linea="Cuatro iteraciones, cuatro versiones usadas por gente real.";
+        r.p.push("Cuatro iteraciones, cuatro versiones que corren. En la segunda, la señora Rosa, que valida en la puerta, pide que la pantalla se ponga roja si el QR ya se usó. Se hace en una tarde.");
+        r.rup="Cada iteración entrega software ejecutable y recoge opinión real. Así los requisitos se corrigen cuando todavía es barato.";
+      } else { s.defectos+=1; r.v="costo"; r.linea="Iteraciones sin usuarios: los problemas de uso aparecieron tarde.";
+        r.p.push("El equipo avanza sin interrupciones. Cuando por fin lo prueba el personal de la puerta, validar un QR toma cuatro toques y la cola vuelve a formarse. Hay que rehacer esa pantalla.");
+        r.rup="Software que corre es media iteración. La otra mitad es que alguien real lo use y diga qué falla.";
+      }
+      if(n==="alto"){ s.plazo-=8; s.pres-=60; s.defectos+=1; s.riesgo=20; s.exploto=true; r.v="error";
+        r.p.push("Y en la semana cinco, la primera prueba con carga real tumba el servidor a las 400 reservas. La arquitectura firmada no aguanta. Rehacerla con seis personas en planilla cuesta ocho semanas y S/\u00a060 mil que no estaban en ningún plan.");
+        r.rup="Esto es lo que compra Elaboración. El mismo problema, descubierto antes del hito LCA, costaba una fracción. El riesgo que no se mitiga no desaparece: espera a que sea caro.";
+        r.linea+=" Y el riesgo heredado de Elaboración explotó.";
+      } else if(n==="medio"){ s.plazo-=6; s.pres-=40; s.defectos+=1; s.riesgo=15;
+        r.p.push("Además, los riesgos que pasaron LCA sin tocar aparecen ahora: el Wi-Fi de la puerta se cae y el padrón de 2009 no responde. Adaptar la arquitectura en plena construcción cuesta seis semanas y S/\u00a040 mil.");
+        r.linea+=" Los riesgos sin mitigar cobraron su parte.";
+      } else { s.riesgo=10;
+        r.p.push("La arquitectura aguanta sin sorpresas: lo difícil ya se había resuelto en Elaboración.");
+      }
+      if(s.deudaAlcance){ s.plazo-=4; s.pres-=20;
+        r.p.push("Y Bienestar reclama el control de subsidio por categoría que \"siempre estuvo en el alcance\". Nadie lo acordó en Inicio, así que se negocia con el código a medio hacer: cuatro semanas y S/\u00a020 mil.");
+      }
+      return r;
+    }
+  },
+
+  g3:{fase:3, hito:"IOC", corto:"hito IOC",
+    titulo:"Hito IOC: Capacidad Operativa Inicial",
+    presion:"El ciclo empieza pronto y el vicerrector ya mandó imprimir afiches con el QR de descarga.",
+    criterios:function(s){
+      var d=s.defectos;
+      return [
+        [d===0?"si":"no","El producto es estable para usuarios reales", d===0 ? "Las pruebas integradas pasan limpias." : (d===1 ? "Quedan fallas serias abiertas." : "Se cae en las pruebas integradas.")],
+        ["si","Lo acordado en el alcance está construido","Reserva, QR y reporte diario."],
+        [s.d3==="b"?"si":"medio","Los usuarios están listos para una beta", s.d3==="b" ? "El personal del comedor lo usa desde la segunda iteración." : "El personal del comedor casi no lo ha usado."]];
+    },
+    opciones:function(s){ var k=Math.max(1,s.defectos);
+      return sellos([
+        "Sale la beta con 150 estudiantes voluntarios.",
+        "Una iteración solo para estabilizar: nada nuevo, arreglar y volver a probar.",
+        "Se cierra el proyecto. Lo gastado, gastado está."],3*k,18*k);},
+    resolver:function(s,id){
+      var d=s.defectos;
+      if(id==="go"){
+        if(d===0){ s.hitos.IOC="cumple";
+          return {v:"ok", linea:"Beta con un producto estable.", sello:["IOC","aprobado"],
+            p:["Sellas IOC. La beta arranca con 150 voluntarios y lo peor que pasa es una queja por el color de un botón."],
+            rup:"IOC no pide perfección. Pide que el producto sea lo bastante estable para usuarios reales, aunque sea en beta."};}
+        s.hitos.IOC="sincumplir";
+        if(d===1){ s.betaInestable=true;
+          return {v:"error", linea:"Beta con fallas abiertas: se arreglaron con público.", sello:["IOC","aprobado"], rojo:true,
+            p:["Sellas IOC con fallas abiertas. En la beta, 150 voluntarios las encuentran todas en dos días y lo cuentan en el grupo de WhatsApp de la facultad.",
+               "Se arreglará en Transición, con los usuarios mirando."],
+            rup:"Aprobar IOC sin estabilidad traslada los defectos a Transición, donde cada falla tiene público."};}
+        return {v:"error", linea:"Beta con un producto que se caía.", sello:["IOC","aprobado"], rojo:true, fin:"fracasoBeta",
+          p:["Sellas IOC porque los afiches ya están pegados."],
+          rup:"La fecha impresa en un afiche no vuelve estable a un producto. IOC es una condición."};
+      }
+      if(id==="espera"){
+        if(d>0){ s.defectos=0; s.riesgo=Math.max(5,s.riesgo-5); s.hitos.IOC="frenado";
+          return {v:"ok", linea:"Frenaste para estabilizar antes de exponer a usuarios.", sello:["IOC","todavía no"],
+            p:["Nada nuevo: solo arreglar y volver a probar. Los afiches esperan en una caja. Al terminar, las pruebas integradas pasan limpias y sellas IOC."],
+            rup:"Una iteración de estabilización también es una iteración: termina en software ejecutable, mejor que el anterior."};}
+        s.hitos.IOC="sobra";
+        return {v:"costo", linea:"Esperaste sin necesidad: el producto ya era estable.", sello:["IOC","todavía no"],
+          p:["Tres semanas puliendo detalles que nadie había pedido. El producto ya era estable. Luego sellas el mismo IOC."],
+          rup:"IOC pide \"lo bastante estable\", no perfecto. Para pulir con usuarios reales existe la Transición."};
+      }
+      s.hitos.IOC="nogo";
+      return {v:"costo", linea:"No-go tardío: legítimo, pero caro.", sello:["No-go","IOC"], rojo:true, fin:"cancelIOC",
+        p:["Cierras el proyecto con casi todo el presupuesto ya gastado."],
+        rup:"El no-go siempre está disponible, pero su precio sube con cada fase. Por eso LCA es el hito donde más vale."};
+    }
+  },
+
+  g4:{fase:4, hito:"PR", corto:"hito PR",
+    titulo:"Hito PR: Lanzamiento del Producto",
+    presion:"Hoy empieza el ciclo. La app está publicada y los afiches, pegados. Para medio campus, eso ya es \"lanzado\".",
+    criterios:function(){return [
+      ["medio","Los usuarios están conformes","Todavía nadie les ha preguntado."],
+      ["medio","El soporte pasó a la OTI","Hoy, soporte es el celular de tu equipo."],
+      ["medio","El sistema anterior se retiró formalmente","El talonario de cartulina sigue en el cajón del concesionario."]];},
+    opciones:function(s){ var x=s.betaInestable;
+      return [
+        {id:"a", titulo:"Declarar el lanzamiento hoy", texto:"La app funciona y la fecha llegó. El equipo se disuelve el viernes, como estaba planeado.", sem:1, mil:5},
+        {id:"b", titulo:"Hacer la Transición completa", texto:"Dos semanas en paralelo con los tickets, capacitar al personal del comedor, entregar el soporte a la OTI con manual y guardia, y retirar la cartulina con resolución de Bienestar."+(x?" Incluye corregir las fallas que salieron en la beta.":""), sem:x?7:4, mil:x?45:25},
+        {id:"c", titulo:"Lanzar y dejar los tickets de cartulina por si acaso", texto:"Los dos sistemas conviven sin fecha de retiro. Si la app falla, nadie se queda sin almorzar.", sem:3, mil:15}
+      ];},
+    resolver:function(s,id){
+      if(id==="a"){ s.hitos.PR="sincumplir";
+        return {v:"error", linea:"Declaraste PR por la fecha, sin cumplir ningún criterio.", sello:["PR","declarado"], rojo:true, fin:"fracaso",
+          p:["Declaras PR. El lunes siguiente, la señora Rosa no sabe qué hacer cuando el lector no reconoce un QR. Llama a tu equipo. Tu equipo ya no existe. La OTI responde que a ellos nadie les entregó nada."],
+          rup:"PR no es publicar la app. Es que los usuarios estén conformes, el soporte transferido y el sistema anterior retirado."};}
+      if(id==="b"){ s.hitos.PR="cumple"; s.riesgo=5;
+        return {v:"ok", linea:"Transición completa: usuarios conformes, soporte entregado, cartulina retirada.", sello:["PR","aprobado"],
+          fin:(s.pres>=0&&s.plazo>=0)?"exito":"sobrecosto",
+          p:["Primero 150 voluntarios, después todo el campus, con los tickets todavía disponibles. El personal del comedor practica con QR de prueba. La OTI recibe manual, accesos y un turno de guardia.",
+             "El último talonario de cartulina se archiva con resolución de Bienestar."],
+          rup:"Transición también es iterativa y también programa: corrige, capacita y entrega. Termina cuando el sistema anterior ya no hace falta."};}
+      s.hitos.PR="nunca";
+      return {v:"costo", linea:"Dos sistemas para siempre: PR nunca se cumplió.", sello:["PR","pendiente"], rojo:true, fin:"amedias",
+        p:["La app funciona. Pero con cartulina disponible, la reventa sigue y el comedor lleva dos cuentas. Seis meses después, medio campus todavía hace cola a las 5:30 \"por costumbre\"."],
+        rup:"Mientras el sistema anterior siga vivo, el hito PR no se cumple. El proyecto no terminó: solo se quedó sin equipo."};
+    }
+  }
+};
+
+var FLUJO = [
+  {t:"fase",f:1},{t:"dec",id:"d1"},{t:"dec",id:"g1"},
+  {t:"fase",f:2},{t:"dec",id:"d2"},{t:"dec",id:"g2"},
+  {t:"fase",f:3},{t:"dec",id:"d3"},{t:"dec",id:"g3"},
+  {t:"fase",f:4},{t:"dec",id:"g4"}
+];
+var TOTAL = 7;
+
+/* ===================== Desenlaces ===================== */
+function desenlace(clave, s){
+  var gastado=INI.pres-s.pres, usadas=INI.plazo-s.plazo;
+  switch(clave){
+    case "exito": return {sello:["PR","aprobado"], titulo:"Cola Cero está en producción",
+      p:["A las 5:30\u00a0am ya no hay nadie en la puerta del comedor. Las reservas abren a las 6:00, se agotan en cuatro minutos y nadie revende nada.",
+         "Cerraste con S/\u00a0"+s.pres+" mil y "+s.plazo+" semanas de margen. Cada hito se aprobó cuando su condición se cumplía, no cuando llegaba su fecha."]};
+    case "sobrecosto": return {sello:["PR","con sobrecosto"], rojo:true, titulo:"Llegó a producción, pero alguien pagó la diferencia",
+      p:["El sistema funciona y la cola de las 5:30 desapareció. También desaparecieron "+(s.pres<0?"S/\u00a0"+(-s.pres)+" mil que no tenías":"")+(s.pres<0&&s.plazo<0?" y ":"")+(s.plazo<0?(-s.plazo)+" semanas que tampoco":"")+". La universidad cubrió el exceso recortando otro proyecto.",
+         "Revisa tus decisiones más abajo: casi siempre el sobrecosto nace en un hito que se aprobó antes de tiempo."]};
+    case "amedias": return {sello:["PR","pendiente"], rojo:true, titulo:"En producción, pero sin terminar",
+      p:["Cola Cero existe y funciona. La cola, la reventa y la doble contabilidad también. Nadie firmó nunca el retiro de la cartulina, así que el proyecto no tiene cierre: solo dejó de tener equipo."]};
+    case "fracaso": return {sello:["PR","sin cumplir"], rojo:true, titulo:"Lanzado y abandonado",
+      p:["En la tercera semana, el lector de la puerta falla un día de lluvia y nadie sabe a quién llamar. El concesionario vuelve a los tickets de cartulina \"temporalmente\". Siguen ahí.",
+         "El software funcionaba. Lo que falló fue la Transición: usuarios sin capacitar, soporte sin dueño, sistema anterior sin retirar."]};
+    case "fracasoBeta": return {sello:["IOC","sin cumplir"], rojo:true, titulo:"El sistema cayó el primer lunes",
+      p:["A las 6:00\u00a0am, 2 400 estudiantes abren la app al mismo tiempo. A las 6:02 la app no responde. A las 6:40, el concesionario saca el talonario de cartulina del cajón y la cola se forma como siempre, pero más molesta.",
+         "El vicerrectorado congela el proyecto. Llegaste a usuarios reales con un producto que tus propias pruebas decían que se caía."]};
+    case "nogoLCA-alto": return {sello:["No-go","a tiempo"], bueno:true, titulo:"No-go a tiempo: la mejor decisión del proyecto",
+      p:["Cancelaste con S/\u00a0"+gastado+" mil gastados y la evidencia en la mano: esa arquitectura no aguantaba. Seguir habría quemado los otros S/\u00a0"+s.pres+" mil con seis desarrolladores en planilla, para descubrir lo mismo en Construcción.",
+         "Bienestar usa lo aprendido para replantear el proyecto el próximo año, con otra arquitectura. Para esto existe el hito LCA: es el último punto donde cancelar es barato. No perdiste el proyecto; le ahorraste a la universidad el fracaso caro."]};
+    case "nogoLCA-medio": return {sello:["No-go","prudente"], bueno:true, titulo:"No-go prudente, quizá prematuro",
+      p:["Cancelaste con riesgos reales sin resolver, y eso es legítimo: nadie puede reprocharte no haber apostado S/\u00a0"+s.pres+" mil sobre supuestos.",
+         "Pero esos riesgos no eran fatales. Una iteración más de Elaboración probablemente los cerraba. Entre GO y NO-GO existe \"todavía no\"."]};
+    case "nogoLCA-bajo": return {sello:["No-go","sin motivo"], rojo:true, titulo:"Cancelaste un proyecto sano",
+      p:["La arquitectura corría y los riesgos mayores estaban mitigados. El no-go es valioso cuando la evidencia lo pide; aquí la evidencia decía lo contrario.",
+         "La cola de las 5:30 sigue ahí."]};
+    case "cancelLCO": return {sello:["No-go","en Inicio"], rojo:s.alineado, titulo:"Cancelado en Inicio",
+      p:[ s.alineado ? "Había alcance acordado y un caso de negocio que cerraba: unos S/\u00a09 000 al mes recuperados. Cancelar en LCO es barato y legítimo, pero aquí los criterios decían que sí valía la pena."
+                     : "Cancelaste sin alcance acordado ni caso de negocio: no sabías si valía la pena. El hito LCO existe justamente para averiguarlo antes de decidir.",
+          "Gastaste S/\u00a0"+gastado+" mil. La cola de las 5:30 sigue ahí."]};
+    case "cancelIOC": return {sello:["No-go","tardío"], rojo:true, titulo:"Cancelado, pero tarde",
+      p:["Un no-go siempre es posible, pero su precio sube con cada fase. Cancelaste con S/\u00a0"+gastado+" mil gastados. En el hito LCA, la misma decisión costaba S/\u00a0"+s.gastoLCA+" mil.",
+         "Lo que sabes hoy sobre esa arquitectura se podía saber entonces, programando un esqueleto y probándolo."]};
+    default: return {sello:["Sin","fondos"], rojo:true, titulo:"La universidad cerró la llave",
+      p:["Llevas S/\u00a0"+gastado+" mil gastados y "+usadas+" semanas de trabajo, muy por encima de lo aprobado. El Consejo Universitario no autoriza la ampliación y el proyecto se detiene donde está.",
+         "El código queda en un repositorio que nadie volverá a abrir. Revisa más abajo en qué hito se trasladó un problema a la fase siguiente."]};
+  }
+}
+
+/* ===================== Estado y talón ===================== */
+var S, paso, vista={pres:INI.pres, plazo:INI.plazo, riesgo:INI.riesgo};
+var cuerpo=document.getElementById("cuerpo");
+var quieto=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function nuevo(){ return {pres:INI.pres, plazo:INI.plazo, riesgo:INI.riesgo, alineado:false, arq:false, uml:false, deudaAlcance:false,
+  defectos:0, betaInestable:false, exploto:false, gastoLCA:0, hitos:{LCO:null,LCA:null,IOC:null,PR:null}, historia:[]}; }
+
+function fPres(v){ return v<0 ? "−S/\u00a0"+(-v)+" mil" : "S/\u00a0"+v+" mil"; }
+function fPlazo(v){ return v<0 ? (-v)+" sem. de atraso" : v+" semanas"; }
+
+function animar(el,de,a,fmt){
+  if(quieto||de===a){ el.textContent=fmt(a); return; }
+  var t0=null, dur=650;
+  function cuadro(t){ if(!t0)t0=t; var k=Math.min(1,(t-t0)/dur); k=1-Math.pow(1-k,3);
+    el.textContent=fmt(Math.round(de+(a-de)*k)); if(k<1) requestAnimationFrame(cuadro); }
+  requestAnimationFrame(cuadro);
+}
+function pintarTalon(){
+  var ip=document.getElementById("i-pres"), il=document.getElementById("i-plazo"), ir=document.getElementById("i-riesgo");
+  animar(ip.querySelector(".val"),vista.pres,S.pres,fPres);
+  animar(il.querySelector(".val"),vista.plazo,S.plazo,fPlazo);
+  animar(ir.querySelector(".val"),vista.riesgo,S.riesgo,function(v){return v+"%";});
+  ir.querySelector("small").textContent=nivel(S.riesgo);
+  ip.querySelector("i").style.width=Math.max(0,Math.min(100,S.pres/INI.pres*100))+"%";
+  il.querySelector("i").style.width=Math.max(0,Math.min(100,S.plazo/INI.plazo*100))+"%";
+  ir.querySelector("i").style.width=S.riesgo+"%";
+  ip.classList.toggle("rojo",S.pres<0); il.classList.toggle("rojo",S.plazo<0); ir.classList.toggle("rojo",S.riesgo>=60);
+  vista={pres:S.pres, plazo:S.plazo, riesgo:S.riesgo};
+  var nombres={cumple:"aprobado cumpliendo los criterios", frenado:"frenado y luego aprobado", sobra:"frenado sin necesidad y luego aprobado",
+    sincumplir:"aprobado sin cumplir los criterios", nunca:"nunca se cumplió", nogo:"no-go", nogobien:"no-go"};
+  [].forEach.call(document.querySelectorAll("#hitos li"),function(li){
+    var e=S.hitos[li.getAttribute("data-h")]; li.className="";
+    if(e==="cumple"||e==="frenado"||e==="sobra") li.className="ok";
+    else if(e==="sincumplir"||e==="nunca") li.className="mal";
+    else if(e==="nogo") li.className="nogo";
+    else if(e==="nogobien") li.className="nogo bien";
+    li.setAttribute("aria-label", li.getAttribute("data-h")+": "+(e?nombres[e]:"pendiente"));
+  });
+}
+
+function mostrar(html){
+  cuerpo.innerHTML=html;
+  window.scrollTo(0,0);
+  var h=cuerpo.querySelector("h1");
+  if(h){ h.setAttribute("tabindex","-1"); try{h.focus({preventScroll:true});}catch(e){h.focus();} }
+}
+function parrafos(a){ return a.map(function(t){return "<p>"+t+"</p>";}).join(""); }
+function costo(o){
+  if(o.fin) return "Fin del proyecto";
+  if(!o.sem&&!o.mil) return "Sin costo directo";
+  return o.sem+" semana"+(o.sem===1?"":"s")+'<span class="sep">, </span><br>S/\u00a0'+o.mil+" mil";
+}
+
+function barrido(f,luego){
+  if(quieto||!document.body.animate||String(document.body.getAttribute("data-fase"))===String(f)){
+    document.body.setAttribute("data-fase",f); luego(); return; }
+  var h=document.createElement("div"); h.className="hoja"; h.style.background="var(--p"+f+")";
+  document.body.appendChild(h);
+  h.animate([{transform:"translateX(100%)"},{transform:"translateX(0)"}],{duration:520,easing:"cubic-bezier(.7,0,.2,1)",fill:"forwards"}).onfinish=function(){
+    document.body.setAttribute("data-fase",f); luego();
+    h.animate([{opacity:1},{opacity:0}],{duration:180,fill:"forwards"}).onfinish=function(){h.remove();};
+  };
+}
+
+/* ===================== Pantallas ===================== */
+function portada(){
+  S=nuevo(); paso=-1; document.body.setAttribute("data-fase",1); pintarTalon();
+  mostrar(
+    '<p class="vale">Vale por un proyecto de software</p>'+
+    '<h1 class="titular">Cola Cero</h1>'+
+    '<p>600 raciones al día. Una cola que empieza a las 5:30\u00a0am. Tickets de cartulina que se revenden a S/\u00a05. Bienestar Universitario te nombra jefe del proyecto que lo va a arreglar: reservar desde el celular y validar con QR en la puerta del comedor.</p>'+
+    '<p>Llévalo por las cuatro fases de RUP. En cada hito, tú decides si el proyecto pasa, espera o se cancela.</p>'+
+    '<div class="tira" aria-hidden="true">'+
+      FASES.slice(1).map(function(f,i){return '<div class="f'+(i+1)+'"><b>'+f.nombre+'</b><span>cierra con '+f.hito+'</span></div>';}).join("")+
+    '</div>'+
+    '<button class="boton" id="ir">Empezar el proyecto</button> '+
+    '<span class="chico nota-boton" style="margin-left:12px">7 decisiones, unos 5 minutos</span>');
+  document.getElementById("ir").onclick=avanzar;
+}
+
+function avanzar(){
+  paso++;
+  var st=FLUJO[paso];
+  if(st.t==="fase") barrido(st.f,function(){ pantallaFase(st.f); });
+  else pantallaDecision(DEC[st.id]);
+}
+
+function pantallaFase(f){
+  var F=FASES[f], antes=f>1?f-2:-1;
+  mostrar(
+    '<div class="meta"><span>Fase '+f+' de 4</span></div>'+
+    '<h1 class="fase-nombre">'+F.nombre+'</h1>'+
+    '<p class="fase-pregunta">'+F.pregunta+'</p>'+
+    '<p>Cierra con el hito <strong>'+F.hito+'</strong>, '+F.hitoNombre+'.</p>'+
+    '<div class="disc" role="img" aria-label="Intensidad de las nueve disciplinas de RUP en la fase de '+F.nombre+'">'+
+      DISC.map(function(d){return '<div><span>'+d[0]+'</span><span class="pista"><i data-w="'+d[1][f-1]+'" style="width:'+(antes<0?0:d[1][antes])+'%"></i></span></div>';}).join("")+
+    '</div>'+
+    '<p class="chico">Las nueve disciplinas trabajan en las cuatro fases; solo cambia su intensidad. '+F.nota+'</p>'+
+    '<button class="boton" id="ir">Entrar a '+F.nombre+'</button>');
+  var barras=cuerpo.querySelectorAll(".disc i");
+  setTimeout(function(){ [].forEach.call(barras,function(b){ b.style.width=b.getAttribute("data-w")+"%"; }); }, quieto?0:120);
+  document.getElementById("ir").onclick=avanzar;
+}
+
+function numDecision(){ return S.historia.length+1; }
+
+function pantallaDecision(D){
+  var ops=D.opciones(S), html=
+    '<div class="meta"><span>Fase '+D.fase+' de 4, '+FASES[D.fase].nombre+'</span><span class="serie">Decisión Nº '+numDecision()+' de '+TOTAL+'</span></div>'+
+    '<h1>'+(D.hito ? 'Hito '+D.hito : D.titulo)+'</h1>';
+  if(D.hito){
+    html+='<p class="sub-hito">'+FASES[D.fase].hitoNombre+'. Así está tu proyecto hoy:</p>'+
+      '<ul class="criterios">'+D.criterios(S).map(function(c){
+        var g=c[0]==="si"?"✓":(c[0]==="no"?"✗":"~"), lbl=c[0]==="si"?"Cumplido":(c[0]==="no"?"No cumplido":"Pendiente o a medias");
+        return '<li class="'+c[0]+'"><span class="marca-c" role="img" aria-label="'+lbl+'">'+g+'</span><span>'+c[1]+'<em>'+c[2]+'</em></span></li>';}).join("")+'</ul>'+
+      '<p class="presion">'+(typeof D.presion==="function"?D.presion(S):D.presion)+'</p>';
+    if(D.hito==="PR"){
+      html+=cupones(ops);
+    } else {
+      html+='<div class="sellos">'+ops.map(function(o){
+        return '<button class="sello-btn" data-id="'+o.id+'"><b>'+o.titulo+'</b><span class="sub">'+o.sub+'</span><span class="texto">'+o.texto+'</span><span class="precio">'+costo(o).replace('<span class="sep">, </span><br>',", ")+'</span></button>';}).join("")+'</div>';
+    }
+  } else {
+    html+=parrafos(D.contexto(S))+cupones(ops);
+  }
+  mostrar(html);
+  [].forEach.call(cuerpo.querySelectorAll("[data-id]"),function(b){
+    b.onclick=function(){ elegir(D, ops.filter(function(o){return o.id===b.getAttribute("data-id");})[0]); };
+  });
+}
+function cupones(ops){
+  return '<ul class="cupones">'+ops.map(function(o){
+    return '<li><button class="cupon" data-id="'+o.id+'"><span><b>'+o.titulo+'</b><span class="texto">'+o.texto+'</span></span><span class="precio">'+costo(o)+'</span></button></li>';}).join("")+'</ul>';
+}
+
+function elegir(D,o){
+  var antes={pres:S.pres, plazo:S.plazo, riesgo:S.riesgo};
+  S.pres-=o.mil; S.plazo-=o.sem;
+  var r=D.resolver(S,o.id);
+  var cancel=r.fin&&/^(cancel|nogo)/.test(r.fin);
+  if(!cancel && (S.pres<-40||S.plazo<-8)) r.fin="sinfondos";
+  S.historia.push({fase:FASES[D.fase].nombre, que:D.corto, eleccion:(D.hito&&o.sub)?o.titulo+": "+o.sub.toLowerCase():o.titulo, v:r.v, linea:r.linea});
+  pintarTalon();
+
+  var d=[], ds=antes.plazo-S.plazo, dm=antes.pres-S.pres, dr=S.riesgo-antes.riesgo;
+  if(ds) d.push('<li>−'+ds+' semana'+(ds===1?"":"s")+'</li>');
+  if(dm) d.push('<li>−S/\u00a0'+dm+' mil</li>');
+  if(dr) d.push('<li class="'+(dr>0?"malo":"")+'">Riesgo '+antes.riesgo+'% a '+S.riesgo+'%</li>');
+  else if(D===DEC.d2||D===DEC.d1) d.push('<li class="malo">Riesgo sin cambios: '+S.riesgo+'%</li>');
+
+  var sig=FLUJO[paso+1], etiqueta;
+  if(r.fin) etiqueta="Ver el desenlace";
+  else if(sig.t==="fase") etiqueta="Pasar a "+FASES[sig.f].nombre;
+  else etiqueta=DEC[sig.id].hito ? "Ir al hito "+DEC[sig.id].hito : "Continuar";
+
+  mostrar(
+    '<div class="meta"><span>Fase '+D.fase+' de 4, '+FASES[D.fase].nombre+'</span><span class="serie">Decisión Nº '+S.historia.length+' de '+TOTAL+'</span></div>'+
+    (r.sello ? '<div class="sello'+(r.rojo?" rojo":"")+'" role="img" aria-label="Sello: '+r.sello.join(" ")+'"><span class="a">'+r.sello[0]+'</span><span class="b">'+r.sello[1]+'</span></div>'
+             : '<p class="elegiste">Elegiste</p>')+
+    '<h1>'+((r.sello&&o.sub) ? ({go:"Aprobaste el hito ",espera:"Frenaste el hito ",nogo:"Cancelaste en el hito "})[o.id]+D.hito : o.titulo)+'</h1>'+
+    parrafos(r.p)+
+    (d.length?'<ul class="deltas" aria-label="Cambios en los indicadores">'+d.join("")+'</ul>':'')+
+    '<section class="rup"><h2>Lo que dice RUP</h2><p>'+r.rup+'</p></section>'+
+    '<button class="boton" id="ir">'+etiqueta+'</button>');
+  document.getElementById("ir").onclick=function(){ r.fin ? pantallaFinal(r.fin) : avanzar(); };
+}
+
+function pantallaFinal(clave){
+  var E=desenlace(clave,S), V={ok:"Acertada", costo:"Con costo", error:"Error clásico"};
+  var T={cumple:["ok","Aprobado con los criterios cumplidos"], frenado:["ok","Frenado una iteración y luego aprobado"], sobra:["ok","Frenado sin necesidad, luego aprobado"],
+         sincumplir:["mal","Aprobado sin cumplir los criterios"], nunca:["mal","Nunca se cumplió"], nogo:["mal","No-go"], nogobien:["ok","No-go a tiempo"]};
+  mostrar('<div class="final">'+
+    '<div class="meta"><span>Desenlace</span><span class="serie">'+S.historia.length+' decisiones</span></div>'+
+    '<div class="sello grande'+(E.rojo?" rojo":"")+'" role="img" aria-label="Sello: '+E.sello.join(" ")+'"><span class="a">'+E.sello[0]+'</span><span class="b">'+E.sello[1]+'</span></div>'+
+    '<h1>'+E.titulo+'</h1>'+parrafos(E.p)+
+    '<ul class="cifras"><li><b>S/\u00a0'+(INI.pres-S.pres)+' mil</b>gastados de S/\u00a0'+INI.pres+' mil</li><li><b>'+(INI.plazo-S.plazo)+' semanas</b>usadas de '+INI.plazo+'</li><li><b>'+S.riesgo+'%</b>riesgo técnico al cierre</li></ul>'+
+    '<button class="boton" data-otra>Volver a jugar</button>'+
+
+    '<h2>Tus decisiones</h2><ol class="repaso">'+S.historia.map(function(h,i){
+      return '<li><span class="num">'+(i+1)+'</span><span><span class="que">'+h.fase+', '+h.que+'</span><br><b>'+h.eleccion+'</b><span class="ver '+h.v+'">'+V[h.v]+'</span><span class="linea">'+h.linea+'</span></span></li>';}).join("")+'</ol>'+
+
+    '<h2>Los cuatro hitos de RUP</h2>'+
+    '<p class="chico">Un hito es una condición que se cumple o no. No es una fecha.</p>'+
+    '<div class="desliza"><table><thead><tr><th>Fase</th><th>Hito de cierre</th><th>Se aprueba cuando</th><th>En tu partida</th></tr></thead><tbody>'+
+      FASES.slice(1).map(function(f){ var e=S.hitos[f.hito], t=e?T[e]:["nada","No llegaste"];
+        return '<tr><th scope="row">'+f.nombre+'</th><td class="hito"><b>'+f.hito+'</b><span>'+f.hitoNombre+'</span></td><td>'+f.criterio+'</td><td class="tuyo '+t[0]+'">'+t[1]+'</td></tr>';}).join("")+
+    '</tbody></table></div>'+
+
+    '<h2>Las nueve disciplinas, en las cuatro fases</h2>'+
+    '<p class="chico">Todas ocurren en todas las fases. Lo único que cambia es su intensidad: se programa desde Elaboración y se siguen ajustando requisitos en Construcción.</p>'+
+    '<div class="desliza"><table class="calor"><thead><tr><th>Disciplina</th>'+FASES.slice(1).map(function(f){return '<th>'+f.nombre+'</th>';}).join("")+'</tr></thead><tbody>'+
+      DISC.map(function(d){return '<tr><th scope="row">'+d[0]+'</th>'+d[1].map(function(w){return '<td><div class="pista"><i style="width:'+w+'%"></i></div></td>';}).join("")+'</tr>';}).join("")+
+    '</tbody></table></div>'+
+
+    '<h2>Para discutir en clase</h2><ol class="debate">'+
+      '<li>¿Quién aprobó el hito LCA con el riesgo alto? ¿Qué pesó más: los 43 diagramas firmados o los seis desarrolladores esperando?</li>'+
+      '<li>¿Alguien canceló el proyecto? ¿Se sintió como perder? ¿Qué dijo el juego?</li>'+
+      '<li>¿En qué se diferencia "todavía no" de un simple retraso?</li>'+
+      '<li>¿En qué decisión se parece más RUP a cascada si se aplica mal?</li>'+
+    '</ol>'+
+    '<p style="margin-top:28px"><button class="boton" data-otra>Volver a jugar</button></p>'+
+  '</div>');
+  [].forEach.call(cuerpo.querySelectorAll("[data-otra]"),function(b){ b.onclick=function(){ S=nuevo(); paso=-1; pintarTalon(); avanzar(); }; });
+}
+
+portada();
+})();
+</script>
+</body>
+</html>

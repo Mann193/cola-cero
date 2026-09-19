@@ -125,6 +125,31 @@ main.ancho{max-width:1120px}
 .portada .texto-p{min-width:0}
 .cartel{display:block; width:100%; height:auto; max-height:calc(100vh - 90px)}
 .corte{display:none}
+.puntaje{display:flex; align-items:baseline; gap:10px; font-family:var(--display)}
+.puntaje span{font-weight:600; font-size:14.5px; color:var(--tinta2)}
+.puntaje b{font-weight:800; font-stretch:80%; font-size:34px; line-height:1; color:var(--sello); font-variant-numeric:tabular-nums}
+.campo{display:flex; flex-direction:column; gap:3px; margin:2px 0 14px; max-width:360px}
+.campo label{font-family:var(--display); font-weight:800; font-size:16.5px}
+.campo input{font-family:var(--display); font-weight:700; font-size:22px; color:var(--tinta); background:transparent; border:0; border-bottom:3px solid var(--tinta); border-radius:0; padding:4px 2px; width:100%}
+.campo input::placeholder{color:var(--tinta2); opacity:.7; font-weight:500}
+.boton[disabled]{opacity:.4; cursor:not-allowed; box-shadow:none !important}
+.marcador{display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px 28px; border:3px solid var(--tinta); padding:14px 20px 15px; margin:18px 0 10px; max-width:640px}
+.marcador .grande{font-family:var(--display); font-weight:800; font-stretch:75%; font-size:clamp(56px,8vw,84px); line-height:.85; color:var(--sello); font-variant-numeric:tabular-nums}
+.marcador .de{font-family:var(--display); font-weight:700; font-size:17px; color:var(--tinta2)}
+.marcador .quien{font-family:var(--display); font-weight:800; font-size:22px; line-height:1.1; overflow-wrap:anywhere}
+.marcador .desglose{flex-basis:100%; font-family:var(--display); font-weight:600; font-size:14.5px; color:var(--tinta2)}
+.ranking{list-style:none; padding:0; margin:0; max-width:640px; counter-reset:pos}
+.ranking li{display:grid; grid-template-columns:38px minmax(0,1fr) auto auto; gap:12px; align-items:baseline; padding:8px 0; border-top:2px dashed var(--hueco); font-family:var(--display)}
+.ranking li:last-child{border-bottom:2px dashed var(--hueco)}
+.ranking .pos{font-weight:800; font-size:20px; color:var(--rojo)}
+.ranking .nom{font-weight:800; font-size:18px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ranking .nom small{display:block; font-weight:600; font-size:13px; color:var(--tinta2)}
+.ranking .pts{font-weight:800; font-stretch:80%; font-size:24px; font-variant-numeric:tabular-nums}
+.ranking .tmp{font-weight:600; font-size:14.5px; color:var(--tinta2); font-variant-numeric:tabular-nums}
+.ranking li.yo{background:var(--velo2)} .ranking li.yo .nom::after{content:" (tú)"; font-weight:600; color:var(--tinta2)}
+.ranking li.oro .pts{color:var(--sello)}
+body.proyector{display:block} body.proyector .talon{display:none} body.proyector main{max-width:1000px; margin:0 auto}
+body.proyector .ranking{max-width:none} body.proyector .ranking .nom{font-size:26px} body.proyector .ranking .pts{font-size:36px} body.proyector .ranking .pos{font-size:28px} body.proyector .ranking li{grid-template-columns:54px minmax(0,1fr) auto 70px; padding:11px 0}
 /* Entrada de fase */
 .fase-nombre{font-stretch:75%; font-size:clamp(50px,9vw,112px); line-height:.9; letter-spacing:-.03em; margin:0 0 12px -.03em; max-width:none}
 .fase-pregunta{font-size:20px; font-style:italic; margin-bottom:4px}
@@ -262,6 +287,8 @@ td.tuyo.ok{color:var(--sello)} td.tuyo.mal{color:var(--rojo)} td.tuyo.nada{color
   .titular{margin-bottom:16px}
   .tira span{display:none}
   .rol div{grid-template-columns:1fr; gap:2px}
+  .tres-sellos{gap:8px} .tres-sellos li{padding:5px 9px 6px; border-width:2px} .tres-sellos b{font-size:17px} .tres-sellos span{font-size:11.5px}
+  .puntaje{position:absolute; right:16px; bottom:11px; gap:6px} .puntaje span{font-size:12.5px} .puntaje b{font-size:22px}
   .portada{display:block; position:relative}
   .cartel{position:absolute; right:-8px; top:-6px; width:136px}
   .corte{display:inline}
@@ -305,6 +332,7 @@ td.tuyo.ok{color:var(--sello)} td.tuyo.mal{color:var(--rojo)} td.tuyo.nada{color
     <div class="ind" id="i-plazo"><dt>Plazo</dt><dd><span class="val"></span></dd><div class="barra"><i></i></div></div>
     <div class="ind" id="i-riesgo"><dt>Riesgo técnico</dt><dd><span class="val"></span><small></small></dd><div class="barra"><i></i></div></div>
   </dl>
+  <div class="puntaje"><span>Puntaje</span><b id="pts">0</b></div>
   <div class="hitos-caja" style="margin-top:auto">
     <p class="hitos-titulo">Hitos sellados</p>
     <ol class="hitos" id="hitos">
@@ -345,6 +373,13 @@ var DISC = [
   ["Gestión de proyecto",[45,40,45,35]],
   ["Entorno",[40,35,20,8]]
 ];
+/* ===== RANKING EN LÍNEA (opcional) =====
+   Pega aquí la URL de tu Firebase Realtime Database, sin barra al final.
+   Ejemplo: "https://sold-out-rup-default-rtdb.firebaseio.com"
+   Si la dejas vacía, el juego funciona igual y cada jugador ve su puntaje en pantalla. */
+var TABLA_URL = "https://sold-out-rup-default-rtdb.firebaseio.com";
+var SALA = "taller-rup";   /* cambia este nombre para empezar un ranking desde cero */
+
 var INI = {pres:200, plazo:36, riesgo:80};
 var CARTEL = '<svg class="cartel" viewBox="0 0 400 470" role="img" aria-label="Ilustración: silueta de un cantante en el escenario, con reflectores y el público levantando las manos"><polygon points="0,0 74,0 292,392 96,392" fill="var(--haz)"/><polygon points="400,0 326,0 108,392 304,392" fill="var(--haz)"/><circle cx="200" cy="205" r="150" fill="var(--sello)" opacity=".17"/><g fill="var(--tinta)" stroke="var(--tinta)" stroke-linecap="round" stroke-linejoin="round">  <path d="M190 262 L170 328 L158 386" fill="none" stroke-width="25"/>  <path d="M212 262 L236 326 L250 386" fill="none" stroke-width="25"/>  <path d="M143 388 h30 M236 388 h30" fill="none" stroke-width="11"/>  <path d="M166 166 Q200 154 236 166 L226 272 L176 272 Z" stroke-width="8"/>  <path d="M170 172 L140 122 L124 66" fill="none" stroke-width="19"/>  <circle cx="122" cy="56" r="12" stroke="none"/>  <path d="M232 172 L268 210 L238 164" fill="none" stroke-width="18"/>  <rect x="193" y="140" width="16" height="22" stroke="none"/>  <circle cx="200" cy="120" r="27" stroke="none"/>  <path d="M172 118 Q170 84 202 86 Q232 88 229 120 Q218 100 200 104 Q182 104 172 118 Z" stroke-width="4"/>  <path d="M240 168 L226 146" fill="none" stroke-width="9"/>  <circle cx="223" cy="141" r="9.5" stroke="none"/>  <path d="M243 172 Q262 250 300 300 T330 392" fill="none" stroke-width="3"/></g><path d="M18 392 H382" stroke="var(--tinta)" stroke-width="5" stroke-linecap="round"/><g fill="var(--tinta)"><circle cx="-6" cy="432" r="17"/><rect x="-26" y="443" width="40" height="60" rx="8"/><path d="M-25 438 L-32 374" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="18" cy="429" r="15"/><rect x="0" y="438" width="36" height="60" rx="8"/><path d="M35 435 L32 374" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="48" cy="446" r="13"/><rect x="32" y="453" width="32" height="60" rx="8"/><path d="M33 452 L26 392" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="26" cy="389" r="7"/><circle cx="78" cy="435" r="13"/><rect x="62" y="442" width="32" height="60" rx="8"/><path d="M63 441 L70 381" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="103" cy="445" r="17"/><rect x="83" y="456" width="40" height="60" rx="8"/><circle cx="129" cy="446" r="13"/><rect x="113" y="453" width="32" height="60" rx="8"/><path d="M114 452 L107 383" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="107" cy="380" r="7"/><circle cx="154" cy="434" r="13"/><rect x="138" y="441" width="32" height="60" rx="8"/><circle cx="185" cy="437" r="17"/><rect x="165" y="448" width="40" height="60" rx="8"/><circle cx="213" cy="438" r="19"/><rect x="191" y="451" width="44" height="60" rx="8"/><circle cx="241" cy="431" r="13"/><rect x="225" y="438" width="32" height="60" rx="8"/><circle cx="272" cy="429" r="19"/><rect x="250" y="442" width="44" height="60" rx="8"/><circle cx="297" cy="438" r="17"/><rect x="277" y="449" width="40" height="60" rx="8"/><circle cx="330" cy="446" r="19"/><rect x="308" y="459" width="44" height="60" rx="8"/><circle cx="355" cy="436" r="13"/><rect x="339" y="443" width="32" height="60" rx="8"/><path d="M340 442 L343 373" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="343" cy="370" r="7"/><circle cx="389" cy="437" r="19"/><rect x="367" y="450" width="44" height="60" rx="8"/></g><rect x="-39" y="354" width="14" height="23" rx="3" fill="var(--tinta)"/><rect x="-37" y="357" width="10" height="17" rx="1.5" fill="var(--haz2)"/><rect x="25" y="354" width="14" height="23" rx="3" fill="var(--tinta)"/><rect x="27" y="357" width="10" height="17" rx="1.5" fill="var(--haz2)"/><rect x="63" y="361" width="14" height="23" rx="3" fill="var(--tinta)"/><rect x="65" y="364" width="10" height="17" rx="1.5" fill="var(--haz2)"/></svg>';
 
@@ -514,6 +549,7 @@ var DEC = {
     resolver:function(s,id){
       s.d3=id;
       var n=nivel(s.riesgo), r={p:[]};
+      r.pts = id==="b" ? 100 : (id==="c" ? 40 : 0);
       if(id==="a"){ s.plazo-=4; s.pres-=20; s.defectos+=2; r.v="error"; r.linea="Integración al final: cascada con otro nombre.";
         r.p.push("Al juntar, el QR que genera un módulo no es el que lee el otro. Integrar cuesta 4 semanas y S/\u00a020 mil más.");
         r.rup="Iterativo significa integrar en cada iteración. \"Todo al final\" es cascada con otro nombre.";
@@ -663,7 +699,7 @@ var cuerpo=document.getElementById("cuerpo");
 var quieto=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function nuevo(){ return {pres:INI.pres, plazo:INI.plazo, riesgo:INI.riesgo, alineado:false, arq:false, uml:false, deudaAlcance:false,
-  defectos:0, betaInestable:false, exploto:false, gastoLCA:0, hitos:{LCO:null,LCA:null,IOC:null,PR:null}, historia:[]}; }
+  puntos:0, defectos:0, betaInestable:false, exploto:false, gastoLCA:0, hitos:{LCO:null,LCA:null,IOC:null,PR:null}, historia:[]}; }
 
 function fPres(v){ return v<0 ? "−S/\u00a0"+(-v)+" mil" : "S/\u00a0"+v+" mil"; }
 function fPlazo(v){ return v<0 ? (-v)+" sem. de atraso" : v+" semanas"; }
@@ -686,6 +722,7 @@ function pintarTalon(){
   ir.querySelector("i").style.width=S.riesgo+"%";
   ip.classList.toggle("rojo",S.pres<0); il.classList.toggle("rojo",S.plazo<0); ir.classList.toggle("rojo",S.riesgo>=60);
   vista={pres:S.pres, plazo:S.plazo, riesgo:S.riesgo};
+  document.getElementById("pts").textContent=S.puntos;
   var nombres={cumple:"aprobado cumpliendo los criterios", frenado:"frenado y luego aprobado", sobra:"frenado sin necesidad y luego aprobado",
     sincumplir:"aprobado sin cumplir los criterios", nunca:"nunca se cumplió", nogo:"no-go", nogobien:"no-go"};
   [].forEach.call(document.querySelectorAll("#hitos li"),function(li){
@@ -699,6 +736,7 @@ function pintarTalon(){
 }
 
 function mostrar(html,clase){
+  if(reloj){ clearInterval(reloj); reloj=null; }
   cuerpo.className=clase||"";
   cuerpo.innerHTML=html;
   window.scrollTo(0,0);
@@ -746,8 +784,7 @@ function rol(){
     '<div class="meta"><span>Antes de empezar</span></div>'+
     '<h1>Tu rol</h1>'+
     '<dl class="rol">'+
-      '<div><dt>Quién eres</dt><dd>Diriges el proyecto de software de una ticketera.</dd></div>'+
-      '<div><dt>Qué te encargaron</dt><dd>Una web nueva que no se caiga cuando 80 mil personas compren a la vez.</dd></div>'+
+      '<div><dt>Quién eres</dt><dd>Diriges el proyecto de una ticketera: una web nueva que no se caiga cuando 80 mil personas compren a la vez.</dd></div>'+
       '<div><dt>Por qué decides tú</dt><dd>El presupuesto y el plazo son tuyos, y son limitados. RUP parte el proyecto en 4 fases, y cada fase cierra con un hito que lleva tu firma.</dd></div>'+
       '<div><dt>Qué decides en cada hito</dt><dd>Si el proyecto cumple los criterios, no si llegó la fecha. Tienes tres sellos:</dd></div>'+
     '</dl>'+
@@ -756,9 +793,15 @@ function rol(){
       '<li><b>Todavía no</b><span>una iteración más, con costo</span></li>'+
       '<li><b>NO-GO</b><span>se cancela el proyecto</span></li>'+
     '</ul>'+
-    '<p class="chico">Tus tres números (presupuesto, plazo y riesgo técnico) están siempre a la vista.</p>'+
-    '<button class="boton" id="ir">Empezar el proyecto</button>');
-  document.getElementById("ir").onclick=avanzar;
+    '<p class="chico" style="margin-bottom:10px">Cada decisión suma hasta 100 puntos y el desenlace da un bono. Gana el puntaje más alto; si hay empate, quien terminó más rápido. Solo cuenta tu primera partida.</p>'+
+    '<div class="campo"><label for="nombre">Tu nombre o apodo</label><input id="nombre" type="text" maxlength="20" autocomplete="off" placeholder="Escríbelo para empezar"></div>'+
+    '<button class="boton" id="ir" disabled>Empezar el proyecto</button>');
+  var inp=document.getElementById("nombre"), b=document.getElementById("ir");
+  inp.value=jugador||recordar("nombre")||"";
+  function ver(){ b.disabled=inp.value.trim().length<2; }
+  inp.oninput=ver; ver();
+  inp.onkeydown=function(e){ if(e.key==="Enter"&&!b.disabled) b.click(); };
+  b.onclick=function(){ jugador=inp.value.trim().slice(0,20); guardar("nombre",jugador); inicio=Date.now(); avanzar(); };
 }
 
 function avanzar(){
@@ -820,6 +863,7 @@ function elegir(D,o){
   var antes={pres:S.pres, plazo:S.plazo, riesgo:S.riesgo};
   S.pres-=o.mil; S.plazo-=o.sem;
   var r=D.resolver(S,o.id);
+  var pts=(r.pts!=null)?r.pts:({ok:100,costo:40,error:0})[r.v]; S.puntos+=pts;
   var cancel=r.fin&&/^(cancel|nogo)/.test(r.fin);
   if(!cancel && (S.pres<-40||S.plazo<-8)) r.fin="sinfondos";
   S.historia.push({fase:FASES[D.fase].nombre, que:D.corto, eleccion:(D.hito&&o.sub)?o.titulo+": "+o.sub.toLowerCase():o.titulo, v:r.v, linea:r.linea});
@@ -828,6 +872,7 @@ function elegir(D,o){
   var d=[], ds=antes.plazo-S.plazo, dm=antes.pres-S.pres, dr=S.riesgo-antes.riesgo;
   if(ds) d.push('<li>−'+ds+' semana'+(ds===1?"":"s")+'</li>');
   if(dm) d.push('<li>−S/\u00a0'+dm+' mil</li>');
+  d.unshift('<li class="'+(pts?"":"malo")+'">'+(pts?"+"+pts:"0")+' puntos</li>');
   if(dr) d.push('<li class="'+(dr>0?"malo":"")+'">Riesgo '+antes.riesgo+'% a '+S.riesgo+'%</li>');
   else if(D===DEC.d2||D===DEC.d1) d.push('<li class="malo">Riesgo sin cambios: '+S.riesgo+'%</li>');
 
@@ -849,6 +894,7 @@ function elegir(D,o){
 }
 
 function pantallaFinal(clave){
+  var M=cerrarPartida(clave);
   var E=desenlace(clave,S), V={ok:"Acertada", costo:"Con costo", error:"Error clásico"};
   var T={cumple:["ok","Aprobado con los criterios cumplidos"], frenado:["ok","Frenado una iteración y luego aprobado"], sobra:["ok","Frenado sin necesidad, luego aprobado"],
          sincumplir:["mal","Aprobado sin cumplir los criterios"], nunca:["mal","Nunca se cumplió"], nogo:["mal","No-go"], nogobien:["ok","No-go a tiempo"]};
@@ -856,8 +902,10 @@ function pantallaFinal(clave){
     '<div class="meta"><span>Desenlace</span><span class="serie">'+S.historia.length+' decisiones</span></div>'+
     '<div class="sello grande'+(E.rojo?" rojo":"")+'" role="img" aria-label="Sello: '+E.sello.join(" ")+'"><span class="a">'+E.sello[0]+'</span><span class="b">'+E.sello[1]+'</span></div>'+
     '<h1>'+E.titulo+'</h1>'+parrafos(E.p)+
+    M.html+
     '<ul class="cifras"><li><b>S/\u00a0'+(INI.pres-S.pres)+' mil</b>gastados de S/\u00a0'+INI.pres+' mil</li><li><b>'+(INI.plazo-S.plazo)+' semanas</b>usadas de '+INI.plazo+'</li><li><b>'+S.riesgo+'%</b>riesgo técnico al cierre</li></ul>'+
     '<button class="boton" data-otra>Volver a jugar</button>'+
+    (TABLA_URL ? '<h2>Ranking del salón</h2><p class="chico" id="rk-estado">Cargando el ranking…</p><ol class="ranking" id="rk"></ol>' : '')+
 
     '<h2>Tus decisiones</h2><ol class="repaso">'+S.historia.map(function(h,i){
       return '<li><span class="num">'+(i+1)+'</span><span><span class="que">'+h.fase+', '+h.que+'</span><br><b>'+h.eleccion+'</b><span class="ver '+h.v+'">'+V[h.v]+'</span><span class="linea">'+h.linea+'</span></span></li>';}).join("")+'</ol>'+
@@ -880,13 +928,82 @@ function pantallaFinal(clave){
       '<li>¿Alguien canceló el proyecto? ¿Se sintió como perder? ¿Qué dijo el juego?</li>'+
       '<li>¿En qué se diferencia "todavía no" de un simple retraso?</li>'+
       '<li>¿En qué decisión se parece más RUP a cascada si se aplica mal?</li>'+
+      '<li>¿Por qué el juego le da más puntos a un no-go a tiempo que a llegar a producción con sobrecosto?</li>'+
     '</ol>'+
     '<p style="margin-top:28px"><button class="boton" data-otra>Volver a jugar</button></p>'+
   '</div>');
-  [].forEach.call(cuerpo.querySelectorAll("[data-otra]"),function(b){ b.onclick=function(){ S=nuevo(); paso=-1; pintarTalon(); avanzar(); }; });
+  [].forEach.call(cuerpo.querySelectorAll("[data-otra]"),function(b){ b.onclick=function(){ S=nuevo(); paso=-1; pintarTalon(); inicio=Date.now(); avanzar(); }; });
+  if(TABLA_URL) seguirRanking(document.getElementById("rk"), document.getElementById("rk-estado"), 10);
 }
 
-portada();
+/* ===================== Puntaje y ranking ===================== */
+var jugador="", inicio=0, reloj=null, memoria={};
+var BONO={exito:200, sobrecosto:80, amedias:60, "nogoLCA-alto":250, "nogoLCA-medio":120, cancelIOC:40};
+var NOMBRE_FIN={exito:"Sold out", sobrecosto:"Con sobrecosto", amedias:"Sin cerrar", fracaso:"Lanzado y abandonado", fracasoBeta:"Se cayó la preventa",
+  "nogoLCA-alto":"No-go a tiempo", "nogoLCA-medio":"No-go prudente", "nogoLCA-bajo":"No-go sin motivo", cancelLCO:"Cancelado en Inicio", cancelIOC:"No-go tardío", sinfondos:"Sin fondos"};
+
+function recordar(k){ try{ return localStorage.getItem("soldout-"+k); }catch(e){ return memoria[k]||null; } }
+function guardar(k,v){ memoria[k]=v; try{ localStorage.setItem("soldout-"+k,v); }catch(e){} }
+function esc(t){ return String(t).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function mmss(t){ t=Math.max(0,Math.round(t)); return Math.floor(t/60)+":"+("0"+(t%60)).slice(-2); }
+
+function cerrarPartida(clave){
+  var dec=S.puntos, bono=BONO[clave]||0, margen=0;
+  if(clave==="exito") margen=Math.min(100, Math.round(Math.min(50,S.pres/43*50)+Math.min(50,S.plazo/9*50)));
+  if(clave==="cancelLCO"&&!S.alineado) bono=40;
+  var total=dec+bono+margen, seg=inicio?Math.round((Date.now()-inicio)/1000):0;
+  S.puntos=total; document.getElementById("pts").textContent=total;
+  var primera=!recordar("jugado-"+SALA);
+  if(primera){ guardar("jugado-"+SALA,"1");
+    if(TABLA_URL) enviar({n:jugador||"Anónimo", p:total, t:seg, f:clave, c:{".sv":"timestamp"}}); }
+  return {html:
+    '<div class="marcador"><div><span class="grande">'+total+'</span> <span class="de">de 1000 puntos</span></div>'+
+    '<div><div class="quien">'+esc(jugador||"Anónimo")+'</div><div class="de">tiempo '+mmss(seg)+'</div></div>'+
+    '<div class="desglose">Decisiones '+dec+' + desenlace '+bono+(margen?' + margen de presupuesto y plazo '+margen:'')+'. '+
+      (primera ? (TABLA_URL ? 'Esta partida entra al ranking.' : 'Esta es tu partida oficial: muestra esta pantalla a quien dirige el taller.')
+               : 'Partida de práctica: para el premio cuenta tu primera partida.')+'</div></div>'};
+}
+
+function enviar(reg){
+  try{ return fetch(TABLA_URL+"/salas/"+SALA+".json",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(reg)}).catch(function(){}); }catch(e){}
+}
+function ordenar(o){
+  var por={};
+  Object.keys(o||{}).forEach(function(k){ var e=o[k];
+    if(!e||typeof e.n!=="string"||typeof e.p!=="number"||e.p>1000||e.p<0) return;
+    var key=e.n.trim().toLowerCase(), c=typeof e.c==="number"?e.c:0; e._c=c;
+    if(!por[key]||c<por[key]._c) por[key]=e; });            /* por nombre, vale la partida más antigua */
+  return Object.keys(por).map(function(k){return por[k];}).sort(function(a,b){ return b.p-a.p || (a.t||0)-(b.t||0); });
+}
+function pintarRanking(ol,estado,lista,tope){
+  var yo=(jugador||"").trim().toLowerCase();
+  estado.textContent = lista.length ? lista.length+(lista.length===1?" jugador terminó":" jugadores terminaron")+". Se actualiza solo." : "Todavía nadie termina. Se actualiza solo.";
+  ol.innerHTML=lista.slice(0,tope).map(function(e,i){
+    var mio=e.n.trim().toLowerCase()===yo&&yo;
+    return '<li class="'+(i===0?"oro ":"")+(mio?"yo":"")+'"><span class="pos">'+(i+1)+'</span><span class="nom">'+esc(e.n.slice(0,20))+'<small>'+esc(NOMBRE_FIN[e.f]||"")+'</small></span><span class="pts">'+e.p+'</span><span class="tmp">'+mmss(e.t||0)+'</span></li>';
+  }).join("");
+  var pos=-1; lista.forEach(function(e,i){ if(e.n.trim().toLowerCase()===yo) pos=i; });
+  if(yo&&pos>=tope) estado.textContent+=" Tu puesto: "+(pos+1)+".";
+}
+function seguirRanking(ol,estado,tope){
+  function traer(){
+    fetch(TABLA_URL+"/salas/"+SALA+".json").then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(o){ pintarRanking(ol,estado,ordenar(o),tope); })
+      .catch(function(){ estado.textContent="No se pudo cargar el ranking. Tu puntaje está arriba: muéstralo en pantalla."; });
+  }
+  setTimeout(traer,700); reloj=setInterval(traer,5000);
+}
+function pantallaRanking(){
+  document.body.className="proyector";
+  mostrar('<div class="meta"><span>Sold Out, simulador de RUP</span></div><h1 class="fase-nombre" style="font-size:clamp(44px,7vw,88px)">Ranking del salón</h1>'+
+    (TABLA_URL ? '<p class="chico" id="rk-estado">Cargando…</p><ol class="ranking" id="rk"></ol>'
+               : '<p>El ranking en línea no está configurado: falta pegar la URL de la base de datos en la variable TABLA_URL del archivo.</p>'));
+  if(TABLA_URL) seguirRanking(document.getElementById("rk"), document.getElementById("rk-estado"), 30);
+}
+
+S=nuevo();
+if(location.hash==="#ranking") pantallaRanking(); else portada();
+window.addEventListener("hashchange",function(){ location.reload(); });
 })();
 </script>
 </body>

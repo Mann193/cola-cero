@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ranking, Sold Out</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Literata:opsz,wght@7..72,400..600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F2D675; --tinta:#1D1947; --tinta2:#47426F; --sello:#4330B0; --rojo:#A32010;
+  --velo:rgba(29,25,71,.08); --velo2:rgba(29,25,71,.18); --hueco:rgba(29,25,71,.55); --mezcla:multiply;
+  --display:"Bricolage Grotesque","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  --serif:"Literata",Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --papel:#453608; --tinta:#F5F0DD; --tinta2:#CBC5B0; --sello:#B7ABFF; --rojo:#FF9483;
+    --velo:rgba(245,240,221,.08); --velo2:rgba(245,240,221,.2); --hueco:rgba(0,0,0,.6); --mezcla:normal;
+  }
+}
+:root[data-theme="dark"]{
+  --papel:#453608; --tinta:#F5F0DD; --tinta2:#CBC5B0; --sello:#B7ABFF; --rojo:#FF9483;
+  --velo:rgba(245,240,221,.08); --velo2:rgba(245,240,221,.2); --hueco:rgba(0,0,0,.6); --mezcla:normal;
+}
+*{box-sizing:border-box}
+body{margin:0; min-height:100vh; background:var(--papel); color:var(--tinta); font-family:var(--serif); font-size:17px; line-height:1.5}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:9; opacity:.16; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.hoja{max-width:1240px; margin:0 auto; padding:clamp(16px,3.2vh,34px) clamp(18px,4vw,56px) 40px}
+
+header{display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap; padding-bottom:14px; position:relative}
+header::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:12px; background:radial-gradient(circle at center,var(--hueco) 0 3px,transparent 3.6px) left center/17px 12px repeat-x}
+.serie{font-family:var(--display); font-weight:700; color:var(--rojo); font-size:16px; letter-spacing:.06em}
+h1{font-family:var(--display); font-weight:800; font-stretch:75%; font-size:clamp(44px,7.4vw,96px); line-height:.88; letter-spacing:-.03em; margin:2px 0 0 -.03em}
+.cuenta{text-align:right; font-family:var(--display); line-height:1}
+.cuenta b{display:block; font-weight:800; font-stretch:78%; font-size:clamp(44px,6vw,80px); color:var(--sello); font-variant-numeric:tabular-nums}
+.cuenta span{font-weight:600; font-size:16px; color:var(--tinta2)}
+
+.finales{list-style:none; display:flex; flex-wrap:wrap; gap:8px 10px; padding:0; margin:24px 0 4px; font-family:var(--display); font-weight:700; font-size:15.5px}
+.finales li{padding:4px 12px 5px; background:var(--velo2); display:flex; gap:8px; align-items:baseline}
+.finales li b{font-weight:800; font-size:18px; font-variant-numeric:tabular-nums}
+.finales li.bien{box-shadow:inset 0 0 0 2px var(--sello); background:transparent; color:var(--sello)}
+
+.ranking{list-style:none; padding:0; margin:14px 0 0; column-gap:48px}
+.ranking.doble{column-count:2}
+.ranking li{
+  break-inside:avoid; display:grid; grid-template-columns:52px minmax(0,1fr) auto 64px; gap:14px; align-items:baseline;
+  padding:9px 8px 9px 0; border-bottom:2px dashed var(--hueco); font-family:var(--display);
+}
+.pos{font-weight:800; font-size:26px; color:var(--rojo); font-variant-numeric:tabular-nums; text-align:right}
+.nom{font-weight:800; font-size:25px; line-height:1.1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.nom small{display:block; font-weight:600; font-size:14px; color:var(--tinta2); letter-spacing:0}
+.pts{font-weight:800; font-stretch:80%; font-size:34px; line-height:1; font-variant-numeric:tabular-nums}
+.tmp{font-weight:600; font-size:16px; color:var(--tinta2); font-variant-numeric:tabular-nums; text-align:right}
+.ranking li.podio .pts{color:var(--sello)}
+.ranking li.lider{background:var(--velo)}
+.gana{display:inline-block; margin-left:12px; padding:1px 8px 2px; vertical-align:middle;
+  font-size:13px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--sello);
+  border:3px double var(--sello); border-radius:6px; transform:rotate(-4deg); mix-blend-mode:var(--mezcla)}
+.ranking li.nuevo{animation:entra 2.4s ease-out}
+@keyframes entra{0%{background:var(--sello); color:var(--papel)} 35%{background:var(--velo2)} 100%{background:transparent}}
+.ranking.doble .nom{font-size:21px} .ranking.doble .pts{font-size:28px} .ranking.doble li{padding:4px 8px 4px 0; grid-template-columns:40px minmax(0,1fr) auto 54px} .ranking.doble .pos{font-size:21px} .ranking.doble .nom small{font-size:13px}
+
+.ranking.triple{column-count:3; column-gap:36px}
+.ranking.triple li{grid-template-columns:30px minmax(0,1fr) auto 44px; gap:9px; padding:5px 4px 5px 0}
+.ranking.triple .pos{font-size:18px} .ranking.triple .nom{font-size:18px} .ranking.triple .nom small{display:none} .ranking.triple .pts{font-size:23px} .ranking.triple .tmp{font-size:13.5px} .ranking.triple .gana{font-size:10px; margin-left:6px; padding:0 5px 1px; border-width:2px}
+body.lleno h1{font-size:clamp(36px,5vw,62px)} body.lleno .cuenta b{font-size:clamp(36px,4.4vw,56px)} body.lleno .finales{margin-top:18px; font-size:14px} body.lleno .finales li b{font-size:16px} body.lleno .finales li{padding:3px 10px 4px}
+.estado{font-size:15px; color:var(--tinta2); margin:16px 0 0}
+.aviso{max-width:42em; border-left:6px solid var(--rojo); padding:4px 0 4px 18px; margin-top:28px}
+.aviso code{font-size:.92em; background:var(--velo2); padding:1px 5px}
+@media (max-width:760px){
+  .ranking.doble,.ranking.triple{column-count:1}
+  .ranking li,.ranking.doble li{grid-template-columns:34px minmax(0,1fr) auto; gap:10px}
+  .tmp{display:none} .nom,.ranking.doble .nom{font-size:19px} .pts,.ranking.doble .pts{font-size:26px} .pos{font-size:20px}
+  .gana{display:none}
+}
+@media (prefers-reduced-motion:reduce){ *{animation:none !important} }
+</style>
+</head>
+<body>
+<div class="hoja">
+  <header>
+    <div>
+      <span class="serie" id="sala-txt">Sold Out, simulador de RUP</span>
+      <h1>Ranking del salón</h1>
+    </div>
+    <div class="cuenta" aria-live="polite"><b id="n">0</b><span id="n-txt">proyectos terminados</span></div>
+  </header>
+
+  <ul class="finales" id="finales" aria-label="Cómo terminaron los proyectos"></ul>
+  <ol class="ranking" id="rk"></ol>
+  <p class="estado" id="estado">Buscando la configuración del juego…</p>
+  <div id="aviso"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== CONFIGURACIÓN =====
+   Déjalas vacías: esta página lee TABLA_URL y SALA directamente del index.html
+   que está en la misma carpeta, así solo configuras el juego en un lugar.
+   Llénalas solo si quieres forzar otros valores. */
+var TABLA_URL = "";
+var SALA = "";
+var CADA_MS = 4000;      /* cada cuánto se actualiza */
+var ARCHIVO_JUEGO = "index.html";
+
+var NOMBRE_FIN={exito:"Sold out", sobrecosto:"Con sobrecosto", amedias:"Sin cerrar", fracaso:"Lanzado y abandonado", fracasoBeta:"Se cayó la preventa",
+  "nogoLCA-alto":"No-go a tiempo", "nogoLCA-medio":"No-go prudente", "nogoLCA-bajo":"No-go sin motivo", cancelLCO:"Cancelado en Inicio", cancelIOC:"No-go tardío", sinfondos:"Sin fondos"};
+var FIN_BUENO={exito:1, "nogoLCA-alto":1};
+
+var $=function(id){return document.getElementById(id);};
+var vistos=null;
+
+function esc(t){ return String(t).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function mmss(t){ t=Math.max(0,Math.round(t||0)); return Math.floor(t/60)+":"+("0"+(t%60)).slice(-2); }
+function parametro(k){ var m=new RegExp("[?&]"+k+"=([^&#]*)").exec(location.search); return m?decodeURIComponent(m[1]):""; }
+
+function ordenar(o){
+  var por={};
+  Object.keys(o||{}).forEach(function(k){ var e=o[k];
+    if(!e||typeof e.n!=="string"||typeof e.p!=="number"||e.p>1000||e.p<0) return;
+    var key=e.n.trim().toLowerCase(), c=typeof e.c==="number"?e.c:0; e._c=c; e._k=key;
+    if(!por[key]||c<por[key]._c) por[key]=e; });          /* por nombre vale la partida más antigua */
+  return Object.keys(por).map(function(k){return por[k];}).sort(function(a,b){ return b.p-a.p || (a.t||0)-(b.t||0); });
+}
+
+function pintar(lista){
+  $("n").textContent=lista.length;
+  $("n-txt").textContent=lista.length===1?"proyecto terminado":"proyectos terminados";
+
+  var cuenta={}; lista.forEach(function(e){ cuenta[e.f]=(cuenta[e.f]||0)+1; });
+  $("finales").innerHTML=Object.keys(cuenta).sort(function(a,b){return cuenta[b]-cuenta[a];}).map(function(f){
+    return '<li class="'+(FIN_BUENO[f]?"bien":"")+'"><b>'+cuenta[f]+'</b>'+esc(NOMBRE_FIN[f]||"Otro final")+'</li>'; }).join("");
+
+  var primera=vistos===null; if(primera) vistos={};
+  $("rk").className="ranking"+(lista.length>16?" triple":(lista.length>8?" doble":""));
+  document.body.className=lista.length>8?"lleno":"";
+  $("rk").innerHTML=lista.map(function(e,i){
+    var nuevo=!primera&&!vistos[e._k]; vistos[e._k]=1;
+    return '<li class="'+(i===0?"lider ":"")+(i<3?"podio ":"")+(nuevo?"nuevo":"")+'"><span class="pos">'+(i+1)+'</span>'+
+      '<span class="nom">'+esc(e.n.slice(0,20))+(i===0&&lista.length>1?'<span class="gana">va ganando</span>':'')+'<small>'+esc(NOMBRE_FIN[e.f]||"")+'</small></span>'+
+      '<span class="pts">'+e.p+'</span><span class="tmp">'+mmss(e.t)+'</span></li>'; }).join("");
+
+  var h=new Date();
+  $("estado").textContent=(lista.length?"":"Todavía nadie termina. ")+"Se actualiza solo. Última lectura: "+("0"+h.getHours()).slice(-2)+":"+("0"+h.getMinutes()).slice(-2)+":"+("0"+h.getSeconds()).slice(-2)+". Si hay empate, va primero quien terminó más rápido.";
+}
+
+function traer(){
+  fetch(TABLA_URL+"/salas/"+encodeURIComponent(SALA)+".json",{cache:"no-store"})
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(o){ $("aviso").innerHTML=""; pintar(ordenar(o)); })
+    .catch(function(){ $("estado").textContent="No se pudo leer el ranking. Reintentando…"; });
+}
+
+function arrancar(){
+  TABLA_URL=TABLA_URL.replace(/\/+$/,"");
+  $("sala-txt").textContent="Sold Out, sala "+SALA;
+  traer(); setInterval(traer,CADA_MS);
+}
+
+function sinConfig(detalle){
+  $("estado").textContent="";
+  $("aviso").innerHTML='<div class="aviso"><p><strong>Falta la configuración del ranking.</strong> '+detalle+'</p>'+
+    '<p>Esta página busca <code>TABLA_URL</code> y <code>SALA</code> dentro de <code>'+ARCHIVO_JUEGO+'</code>, en la misma carpeta. Revisa que el juego esté subido con ese nombre y que <code>TABLA_URL</code> tenga la dirección de tu Firebase. También puedes escribir ambos valores al inicio del script de este archivo.</p></div>';
+}
+
+var salaUrl=parametro("sala");
+if(TABLA_URL && (SALA||salaUrl)){ SALA=salaUrl||SALA; arrancar(); }
+else {
+  fetch(ARCHIVO_JUEGO,{cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(t){
+    var u=/var\s+TABLA_URL\s*=\s*"([^"]*)"/.exec(t), s=/var\s+SALA\s*=\s*"([^"]*)"/.exec(t);
+    TABLA_URL=TABLA_URL||(u?u[1]:""); SALA=salaUrl||SALA||(s?s[1]:"");
+    if(!TABLA_URL) return sinConfig("En "+ARCHIVO_JUEGO+", la variable TABLA_URL está vacía.");
+    if(!SALA) return sinConfig("No se encontró el nombre de la sala.");
+    arrancar();
+  }).catch(function(){ sinConfig("No se pudo abrir "+ARCHIVO_JUEGO+" (si abriste este archivo con doble clic desde tu PC, es normal: pruébalo ya subido a GitHub)."); });
+}
+})();
+</script>
+</body>
+</html>

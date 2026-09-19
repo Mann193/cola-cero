@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cola Cero, simulador de RUP</title>
+<title>Sold Out, simulador de RUP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
   --p1:#F2D675; --p2:#A9CFE6; --p3:#F1B5C0; --p4:#A6D9C3;
   --tinta:#1D1947; --tinta2:#47426F; --sello:#4330B0; --rojo:#A32010;
   --velo:rgba(29,25,71,.08); --velo2:rgba(29,25,71,.18); --hueco:rgba(29,25,71,.55);
-  --mezcla:multiply;
+  --mezcla:multiply; --haz:rgba(255,255,255,.38); --haz2:#FFF6CF;
   --display:"Bricolage Grotesque","Arial Narrow","Helvetica Neue",Arial,sans-serif;
   --serif:"Literata",Georgia,"Times New Roman",serif;
 }
@@ -22,14 +22,14 @@
     --p1:#453608; --p2:#0E3145; --p3:#45202A; --p4:#0E392C;
     --tinta:#F5F0DD; --tinta2:#CBC5B0; --sello:#B7ABFF; --rojo:#FF9483;
     --velo:rgba(245,240,221,.08); --velo2:rgba(245,240,221,.2); --hueco:rgba(0,0,0,.6);
-    --mezcla:normal;
+    --mezcla:normal; --haz:rgba(255,255,255,.07); --haz2:#FFE9A0;
   }
 }
 :root[data-theme="dark"]{
   --p1:#453608; --p2:#0E3145; --p3:#45202A; --p4:#0E392C;
   --tinta:#F5F0DD; --tinta2:#CBC5B0; --sello:#B7ABFF; --rojo:#FF9483;
   --velo:rgba(245,240,221,.08); --velo2:rgba(245,240,221,.2); --hueco:rgba(0,0,0,.6);
-  --mezcla:normal;
+  --mezcla:normal; --haz:rgba(255,255,255,.07); --haz2:#FFE9A0;
 }
 
 *{box-sizing:border-box}
@@ -103,9 +103,9 @@ p{margin:0 0 14px; max-width:40em}
   background:var(--tinta); color:var(--papel);
   font-family:var(--display); font-weight:700; font-size:18px; letter-spacing:.005em;
   padding:14px 26px; border-radius:3px; margin-top:10px;
-  transition:transform .12s;
+  transition:box-shadow .12s, transform .08s;
 }
-@media (hover:hover){.boton:hover{transform:translateY(-2px)}}
+@media (hover:hover){.boton:hover{box-shadow:0 4px 0 var(--sello)}}
 .boton:active{transform:translateY(1px)}
 .boton.linea{background:transparent; color:var(--tinta); box-shadow:inset 0 0 0 2px var(--tinta)}
 :focus-visible{outline:3px solid var(--sello); outline-offset:3px}
@@ -120,6 +120,11 @@ p{margin:0 0 14px; max-width:40em}
 .tira span{font-size:13.5px; font-weight:600; color:var(--tinta2)}
 .tira .f1{background:var(--p1)} .tira .f2{background:var(--p2)} .tira .f3{background:var(--p3)} .tira .f4{background:var(--p4)}
 
+main.ancho{max-width:1120px}
+.portada{display:grid; grid-template-columns:minmax(0,1fr) minmax(200px,330px); gap:8px 36px; align-items:end}
+.portada .texto-p{min-width:0}
+.cartel{display:block; width:100%; height:auto; max-height:calc(100vh - 90px)}
+.corte{display:none}
 /* Entrada de fase */
 .fase-nombre{font-stretch:75%; font-size:clamp(50px,9vw,112px); line-height:.9; letter-spacing:-.03em; margin:0 0 12px -.03em; max-width:none}
 .fase-pregunta{font-size:20px; font-style:italic; margin-bottom:4px}
@@ -144,7 +149,13 @@ p{margin:0 0 14px; max-width:40em}
 .precio{font-family:var(--display); font-weight:700; font-size:16px; line-height:1.3; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; padding-top:3px}
 
 /* Hito: criterios y sellos */
-.sub-hito{font-family:var(--display); font-weight:600; font-size:18px; margin:-8px 0 0}
+.sub-hito{font-family:var(--display); font-weight:700; font-size:18px; margin:-8px 0 0; color:var(--sello)}
+.rol{margin:4px 0 14px; max-width:640px} .rol div{display:grid; grid-template-columns:170px 1fr; gap:14px; padding:9px 0; border-top:2px dashed var(--hueco)}
+.rol dt{font-family:var(--display); font-weight:800; font-size:16.5px} .rol dd{margin:0; line-height:1.45}
+.tres-sellos{list-style:none; padding:0; margin:0 0 16px; display:flex; flex-wrap:wrap; gap:10px 14px}
+.tres-sellos li{border:3px solid var(--tinta); border-radius:8px; padding:7px 14px 8px; display:flex; flex-direction:column; line-height:1.15}
+.tres-sellos li:nth-child(1){transform:rotate(-2deg)} .tres-sellos li:nth-child(3){transform:rotate(1.5deg)}
+.tres-sellos b{font-family:var(--display); font-weight:800; font-stretch:80%; font-size:24px} .tres-sellos span{font-family:var(--display); font-weight:600; font-size:13.5px; color:var(--tinta2)}
 .criterios{list-style:none; padding:0; margin:14px 0 6px; max-width:640px}
 .criterios li{display:grid; grid-template-columns:26px 1fr; gap:12px; padding:7px 0; border-top:1px solid var(--velo2); line-height:1.4}
 .criterios li:last-child{border-bottom:1px solid var(--velo2)}
@@ -158,9 +169,9 @@ p{margin:0 0 14px; max-width:40em}
 .sello-btn{
   appearance:none; cursor:pointer; text-align:left; color:inherit; background:transparent; font:inherit;
   border:3px solid var(--tinta); border-radius:8px; padding:14px 16px 15px;
-  display:flex; flex-direction:column; gap:4px; transition:background-color .15s, transform .12s;
+  display:flex; flex-direction:column; gap:4px; transition:background-color .15s, box-shadow .12s;
 }
-@media (hover:hover){.sello-btn:hover{background:var(--velo); transform:rotate(-1.2deg)}}
+@media (hover:hover){.sello-btn:hover{background:var(--velo); box-shadow:5px 5px 0 var(--tinta)}}
 .sello-btn:focus-visible{background:var(--velo)}
 .sello-btn b{font-family:var(--display); font-weight:800; font-stretch:80%; font-size:30px; line-height:1}
 .sello-btn .sub{font-family:var(--display); font-weight:700; font-size:15.5px}
@@ -250,7 +261,13 @@ td.tuyo.ok{color:var(--sello)} td.tuyo.mal{color:var(--rojo)} td.tuyo.nada{color
   .disc div{grid-template-columns:132px 1fr; font-size:13px}
   .titular{margin-bottom:16px}
   .tira span{display:none}
-  .tira div{padding:7px 4px 8px 6px} .tira b{font-size:12.5px}
+  .rol div{grid-template-columns:1fr; gap:2px}
+  .portada{display:block; position:relative}
+  .cartel{position:absolute; right:-8px; top:-6px; width:136px}
+  .corte{display:inline}
+  .portada .vale{max-width:200px; line-height:1.2; margin-bottom:6px}
+  .portada .titular{font-size:76px; margin-bottom:18px}
+  .tira div{padding:7px 4px 8px 6px} .tira b{font-size:11.5px; letter-spacing:-.01em}
   .nota-boton{display:block; margin:10px 0 0 !important}
   .precio br{display:none} .precio .sep{display:inline}
 }
@@ -280,8 +297,8 @@ td.tuyo.ok{color:var(--sello)} td.tuyo.mal{color:var(--rojo)} td.tuyo.nada{color
 
 <aside class="talon" aria-label="Estado del proyecto">
   <div class="marca">
-    <span class="serie">Nº 000600</span>
-    <strong>Cola Cero</strong>
+    <span class="serie">Nº 080000</span>
+    <strong>Sold Out</strong>
   </div>
   <dl class="indic">
     <div class="ind" id="i-pres"><dt>Presupuesto</dt><dd><span class="val"></span></dd><div class="barra"><i></i></div></div>
@@ -329,6 +346,7 @@ var DISC = [
   ["Entorno",[40,35,20,8]]
 ];
 var INI = {pres:200, plazo:36, riesgo:80};
+var CARTEL = '<svg class="cartel" viewBox="0 0 400 470" role="img" aria-label="Ilustración: silueta de un cantante en el escenario, con reflectores y el público levantando las manos"><polygon points="0,0 74,0 292,392 96,392" fill="var(--haz)"/><polygon points="400,0 326,0 108,392 304,392" fill="var(--haz)"/><circle cx="200" cy="205" r="150" fill="var(--sello)" opacity=".17"/><g fill="var(--tinta)" stroke="var(--tinta)" stroke-linecap="round" stroke-linejoin="round">  <path d="M190 262 L170 328 L158 386" fill="none" stroke-width="25"/>  <path d="M212 262 L236 326 L250 386" fill="none" stroke-width="25"/>  <path d="M143 388 h30 M236 388 h30" fill="none" stroke-width="11"/>  <path d="M166 166 Q200 154 236 166 L226 272 L176 272 Z" stroke-width="8"/>  <path d="M170 172 L140 122 L124 66" fill="none" stroke-width="19"/>  <circle cx="122" cy="56" r="12" stroke="none"/>  <path d="M232 172 L268 210 L238 164" fill="none" stroke-width="18"/>  <rect x="193" y="140" width="16" height="22" stroke="none"/>  <circle cx="200" cy="120" r="27" stroke="none"/>  <path d="M172 118 Q170 84 202 86 Q232 88 229 120 Q218 100 200 104 Q182 104 172 118 Z" stroke-width="4"/>  <path d="M240 168 L226 146" fill="none" stroke-width="9"/>  <circle cx="223" cy="141" r="9.5" stroke="none"/>  <path d="M243 172 Q262 250 300 300 T330 392" fill="none" stroke-width="3"/></g><path d="M18 392 H382" stroke="var(--tinta)" stroke-width="5" stroke-linecap="round"/><g fill="var(--tinta)"><circle cx="-6" cy="432" r="17"/><rect x="-26" y="443" width="40" height="60" rx="8"/><path d="M-25 438 L-32 374" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="18" cy="429" r="15"/><rect x="0" y="438" width="36" height="60" rx="8"/><path d="M35 435 L32 374" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="48" cy="446" r="13"/><rect x="32" y="453" width="32" height="60" rx="8"/><path d="M33 452 L26 392" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="26" cy="389" r="7"/><circle cx="78" cy="435" r="13"/><rect x="62" y="442" width="32" height="60" rx="8"/><path d="M63 441 L70 381" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="103" cy="445" r="17"/><rect x="83" y="456" width="40" height="60" rx="8"/><circle cx="129" cy="446" r="13"/><rect x="113" y="453" width="32" height="60" rx="8"/><path d="M114 452 L107 383" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="107" cy="380" r="7"/><circle cx="154" cy="434" r="13"/><rect x="138" y="441" width="32" height="60" rx="8"/><circle cx="185" cy="437" r="17"/><rect x="165" y="448" width="40" height="60" rx="8"/><circle cx="213" cy="438" r="19"/><rect x="191" y="451" width="44" height="60" rx="8"/><circle cx="241" cy="431" r="13"/><rect x="225" y="438" width="32" height="60" rx="8"/><circle cx="272" cy="429" r="19"/><rect x="250" y="442" width="44" height="60" rx="8"/><circle cx="297" cy="438" r="17"/><rect x="277" y="449" width="40" height="60" rx="8"/><circle cx="330" cy="446" r="19"/><rect x="308" y="459" width="44" height="60" rx="8"/><circle cx="355" cy="436" r="13"/><rect x="339" y="443" width="32" height="60" rx="8"/><path d="M340 442 L343 373" stroke-width="9" stroke-linecap="round" fill="none" stroke="var(--tinta)"/><circle cx="343" cy="370" r="7"/><circle cx="389" cy="437" r="19"/><rect x="367" y="450" width="44" height="60" rx="8"/></g><rect x="-39" y="354" width="14" height="23" rx="3" fill="var(--tinta)"/><rect x="-37" y="357" width="10" height="17" rx="1.5" fill="var(--haz2)"/><rect x="25" y="354" width="14" height="23" rx="3" fill="var(--tinta)"/><rect x="27" y="357" width="10" height="17" rx="1.5" fill="var(--haz2)"/><rect x="63" y="361" width="14" height="23" rx="3" fill="var(--tinta)"/><rect x="65" y="364" width="10" height="17" rx="1.5" fill="var(--haz2)"/></svg>';
 
 function nivel(r){ return r>=60 ? "alto" : (r>35 ? "medio" : "bajo"); }
 
@@ -344,287 +362,255 @@ function sellos(txt, sem, mil){
 var DEC = {
 
   d1:{fase:1, corto:"cómo empezar",
-    titulo:"Tienes tres semanas y cuatro jefes",
-    contexto:function(){return [
-      "Bienestar Universitario quiere controlar el subsidio. El concesionario del comedor no quiere cambiar su rutina. La OTI pregunta quién va a mantener esto. Los delegados estudiantiles solo quieren dormir hasta las 7.",
-      "¿Por dónde empiezas?"];},
+    titulo:"La productora quiere todo, y lo quiere ya",
+    pregunta:"Inicio: ¿qué hay que lograr antes de avanzar?",
+    contexto:function(){return ["Tienes pocas semanas para arrancar. ¿En qué las usas?"];},
     opciones:function(){return [
-      {id:"a", titulo:"Especificar todo antes de empezar", texto:"Un documento de requisitos completo: 86 casos de uso detallados y firmados. Nadie podrá decir que no se le preguntó.", sem:8, mil:30},
-      {id:"b", titulo:"Sentar a los cuatro en una sala", texto:"Taller de dos días para acordar qué entra y qué no, cuánto ahorra el comedor, una estimación gruesa y una lista de riesgos.", sem:3, mil:12},
-      {id:"c", titulo:"Mostrar algo que se pueda tocar", texto:"Un prototipo de las pantallas de la app para entusiasmar al vicerrectorado y asegurar respaldo.", sem:2, mil:8}
+      {id:"a", titulo:"Especificar todo antes de empezar", texto:"Un documento completo de requisitos, firmado por todos.", sem:8, mil:30},
+      {id:"b", titulo:"Acordar lo esencial con la productora", texto:"Una página: qué entra, cuánto se gana y cuánto cuesta, a grandes rasgos.", sem:3, mil:12},
+      {id:"c", titulo:"Mostrar pantallas bonitas", texto:"Un prototipo visual para entusiasmar a la productora.", sem:2, mil:8}
     ];},
     resolver:function(s,id){
       s.d1=id;
       if(id==="a"){ s.alineado=true;
-        return {v:"error", linea:"Ocho semanas de papel. El riesgo técnico no se movió.",
-          p:["Ocho semanas después tienes 140 páginas firmadas. El alcance quedó acordado y el caso de negocio cierra: unos S/\u00a09 000 al mes en raciones recuperadas.",
-             "Pero en la semana seis el concesionario cambió los turnos de almuerzo y once casos de uso ya no sirven. Y el riesgo técnico sigue donde estaba: nadie ha probado nada."],
-          rup:"Inicio no busca requisitos completos, sino acuerdo: alcance, caso de negocio y una estimación. El detalle llega iteración por iteración, porque los requisitos cambian."};
-      }
+        return {v:"error", linea:"Ocho semanas de papel. El riesgo no se movió.",
+          p:["140 páginas firmadas. A mitad de camino la productora cambió los precios y una parte ya no sirve. Nadie ha probado nada."],
+          rup:"Inicio no busca requisitos completos: busca acuerdo. El detalle llega iteración por iteración."};}
       if(id==="b"){ s.alineado=true; s.riesgo-=5;
         return {v:"ok", linea:"Acuerdo corto y suficiente.",
-          p:["Salen con un alcance de una página: reserva, QR y reporte diario. El control de subsidio por categoría queda fuera de esta versión, por escrito.",
-             "El comedor calcula que recupera unos S/\u00a09 000 al mes. Y en la pizarra quedan anotados tres riesgos que dan miedo."],
-          rup:"Inicio es corto a propósito. Su producto es que los interesados coincidan en el alcance, el caso de negocio y una estimación inicial."};
-      }
+          p:["Alcance en una página: cola virtual, compra y entrada con QR. La reventa oficial queda fuera, por escrito."],
+          rup:"Inicio es corto a propósito: alcance, caso de negocio y una estimación inicial."};}
       s.alineado=false;
       return {v:"costo", linea:"Mucho entusiasmo, ningún acuerdo.",
-        p:["El vicerrector queda encantado con las pantallas.",
-           "Pero Bienestar sale convencida de que la app controlará el subsidio por categoría, el concesionario cree que para él nada cambia, y nadie ha estimado cuánto cuesta todo esto."],
-        rup:"Una prueba de concepto es válida en Inicio, pero no reemplaza el acuerdo. El entusiasmo no es alcance."};
+        p:["A la productora le encantan las pantallas. También da por hecho que habrá reventa oficial. Nadie ha hablado de costos."],
+        rup:"Un prototipo es válido en Inicio, pero el entusiasmo no es alcance."};
     }
   },
 
-  g1:{fase:1, hito:"LCO", corto:"hito LCO",
-    titulo:"Hito LCO: Objetivos del Ciclo de Vida",
-    presion:"El vicerrector quiere anunciar Cola Cero este viernes, en el aniversario de la universidad. Para él, el hito es el viernes.",
+  g1:{fase:1, hito:"LCO", corto:"hito LCO", pregunta:"¿Se cumple la condición?",
+    presion:"La productora quiere anunciar la fecha de venta este viernes.",
     criterios:function(s){
       if(s.alineado) return [
-        ["si","Los interesados coinciden en el alcance", s.d1==="a" ? "Acordado, con 140 páginas de sobra." : "Una página, firmada por los cuatro."],
-        ["si","Hay caso de negocio","Unos S/\u00a09 000 al mes en raciones recuperadas."],
-        ["si","Hay una estimación inicial","Gruesa, pero todos la conocen."]];
+        ["si","Alcance acordado", s.d1==="a" ? "Con 140 páginas de sobra." : "Una página, firmada."],
+        ["si","Caso de negocio","La comisión paga el proyecto en dos conciertos."],
+        ["si","Estimación inicial","Gruesa, pero conocida."]];
       return [
-        ["no","Los interesados coinciden en el alcance","Bienestar y el concesionario entienden cosas distintas."],
-        ["no","Hay caso de negocio","Nadie ha hecho la cuenta."],
-        ["no","Hay una estimación inicial","Solo hay pantallas bonitas."]];
+        ["no","Alcance acordado","La productora espera cosas que nadie prometió."],
+        ["no","Caso de negocio","Nadie ha hecho la cuenta."],
+        ["no","Estimación inicial","Solo hay pantallas bonitas."]];
     },
-    opciones:function(){return sellos([
-      "El proyecto pasa a Elaboración y el viernes hay anuncio.",
-      "Otra iteración de Inicio hasta que los criterios se cumplan. Sin anuncio el viernes.",
-      "Se cierra el proyecto y se devuelve el presupuesto que queda."],3,10);},
+    opciones:function(){return sellos(["Pasas a Elaboración y el viernes hay anuncio.","Otra iteración de Inicio hasta cumplir los criterios.","Se cierra el proyecto."],3,10);},
     resolver:function(s,id){
       var ok=s.alineado;
       if(id==="go"){
         if(ok){ s.hitos.LCO="cumple";
           return {v:"ok", linea:"Aprobado porque los criterios se cumplían.", sello:["LCO","aprobado"],
-            p:["Sellas LCO. El viernes, el vicerrector anuncia un proyecto que todos entienden igual."],
-            rup:"El hito se aprueba porque sus criterios se cumplen. Que además coincida con la fecha es una suerte, no la razón."};}
+            p:["El viernes se anuncia un proyecto que todos entienden igual."],
+            rup:"El hito se aprueba porque su condición se cumple, no porque llegó el viernes."};}
         s.hitos.LCO="sincumplir"; s.deudaAlcance=true;
         return {v:"error", linea:"Aprobado por la fecha. El alcance quedó sin acordar.", sello:["LCO","aprobado"], rojo:true,
-          p:["Sellas LCO y el anuncio sale precioso.",
-             "Bienestar sigue esperando su control de subsidio por categoría. Nadie se lo ha negado, así que nadie lo ha presupuestado."],
-          rup:"Un hito es una condición, no una fecha. Aprobarlo sin cumplirlo no adelanta nada: traslada el problema a una fase donde arreglarlo cuesta más."};
+          p:["El anuncio sale precioso. La productora sigue esperando su reventa oficial, y nadie la ha presupuestado."],
+          rup:"Un hito es una condición, no una fecha. Aprobarlo sin cumplirlo traslada el problema a una fase más cara."};
       }
       if(id==="espera"){
         if(!ok){ s.alineado=true; s.riesgo-=5; s.hitos.LCO="frenado";
           return {v:"ok", linea:"Frenaste hasta cumplir los criterios.", sello:["LCO","todavía no"],
-            p:["El aniversario pasa sin tu proyecto y el vicerrector deja de saludarte en el pasillo.",
-               "Pero haces el taller que faltaba: alcance de una página, caso de negocio, estimación. Tres semanas después, ahora sí, sellas LCO."],
-            rup:"Frenar un hito cuesta semanas que se ven hoy. No frenarlo cuesta meses que todavía no se ven."};}
+            p:["Sin anuncio el viernes y con la productora molesta. Pero ahora hay alcance, cuentas y estimación."],
+            rup:"Frenar un hito cuesta semanas hoy. No frenarlo cuesta meses después."};}
         s.hitos.LCO="sobra";
         return {v:"costo", linea:"Esperaste sin necesidad: tres semanas perdidas.", sello:["LCO","todavía no"],
-          p:["Otra ronda de reuniones. Todos repiten lo que ya habían acordado. Tres semanas después sellas exactamente el mismo LCO."],
-          rup:"Si los criterios ya se cumplen, el hito se aprueba. Esperar \"por si acaso\" también es ignorar la condición."};
+          p:["Tres semanas de reuniones para acordar lo que ya estaba acordado."],
+          rup:"Si la condición ya se cumple, el hito se aprueba."};
       }
       s.hitos.LCO="nogo";
       return {v: ok?"error":"costo", linea:"Cancelaste en el primer hito.", sello:["No-go","LCO"], rojo:true, fin:"cancelLCO",
-        p:["Cierras el proyecto antes de empezar Elaboración."],
+        p:["Cierras el proyecto antes de Elaboración."],
         rup:"Cancelar en LCO es lo más barato que existe. La pregunta es si los criterios lo pedían."};
     }
   },
 
   d2:{fase:2, corto:"cómo atacar el riesgo",
-    titulo:"Tres riesgos que dan miedo",
-    contexto:function(){return [
-      "Uno: a las 6:00\u00a0am, 2 400 estudiantes intentarán reservar 600 raciones en el mismo minuto. Dos: el Wi-Fi de la puerta del comedor se cae cada vez que llueve. Tres: el padrón de matriculados vive en un sistema de la OTI de 2009, sin API.",
-      "¿A qué dedicas Elaboración?"];},
+    titulo:"80 mil personas, el mismo minuto",
+    pregunta:"Elaboración: ¿qué debe producir esta fase?",
+    contexto:function(){return ["El gran riesgo: que la web se caiga al abrir la venta, como la última vez. ¿Qué haces con él?"];},
     opciones:function(){return [
-      {id:"a", titulo:"Diseñar toda la arquitectura en UML y firmarla en comité", texto:"Modelo completo: clases, secuencia y despliegue, revisado y firmado por el comité de arquitectura de la OTI. Construcción arranca con todo decidido.", sem:6, mil:35},
-      {id:"b", titulo:"Probar solo el pico de las 6:00\u00a0am", texto:"Una prueba de concepto del riesgo que más asusta. Lo demás se resuelve durante Construcción.", sem:4, mil:22},
-      {id:"c", titulo:"Programar un esqueleto que funcione de punta a punta", texto:"Dos iteraciones: reservar, generar el QR y validarlo en la puerta, con el padrón real y carga simulada. Feo, pero ejecutable.", sem:8, mil:50}
+      {id:"a", titulo:"Diseñar toda la arquitectura en UML y firmarla en comité", texto:"Construcción arranca con todo decidido y aprobado.", sem:6, mil:35},
+      {id:"b", titulo:"Simular una venta pequeña", texto:"Probar con 5 mil compradores simulados y extrapolar.", sem:4, mil:22},
+      {id:"c", titulo:"Programar la cola virtual y tumbarla a propósito", texto:"Un esqueleto que ya vende, atacado con 80 mil compradores simulados.", sem:8, mil:50}
     ];},
     resolver:function(s,id){
       s.d2=id;
       if(id==="a"){ s.riesgo-=5; s.uml=true;
         return {v:"error", linea:"43 diagramas firmados. Riesgo casi intacto.",
-          p:["El comité firma por unanimidad 43 diagramas. El de despliegue afirma que un servidor basta para el pico de las 6:00\u00a0am.",
-             "Es una opinión: nadie ha ejecutado nada. Mira tu indicador de riesgo."],
-          rup:"El producto de Elaboración es una arquitectura ejecutable y probada. Un modelo firmado describe la apuesta; no dice si se gana."};
-      }
+          p:["El comité firma 43 diagramas. Uno dice que cuatro servidores bastan. Nadie lo ha probado: mira tu riesgo."],
+          rup:"Elaboración produce una arquitectura ejecutable y probada, no un documento aprobado."};}
       if(id==="b"){ s.riesgo-=25;
-        return {v:"costo", linea:"Un riesgo muerto, dos sin tocar.",
-          p:["La primera prueba tumba el servidor con 400 reservas simultáneas. Pasas a una cola de reservas y aguanta 3 000. Ese riesgo muere.",
-             "El Wi-Fi de la puerta y el padrón de 2009 siguen ahí, sin tocar."],
-          rup:"Atacar primero el riesgo mayor es correcto. Pero el hito pide una línea base que integre las piezas, no una prueba suelta."};
-      }
+        return {v:"costo", linea:"Riesgo mitigado a medias.",
+          p:["Con 5 mil compradores, aguanta. Con 80 mil, nadie sabe."],
+          rup:"Atacar el riesgo es correcto, pero el hito pide evidencia a la escala real."};}
       s.riesgo-=50; s.arq=true;
-      return {v:"ok", linea:"Software que corre y riesgos convertidos en datos.",
-        p:["Primera iteración: la prueba de carga tumba el servidor con 400 reservas simultáneas. Cambias a una cola de reservas y aguanta 3 000.",
-           "Segunda iteración: el QR se valida sin conexión y el padrón se lee con una copia nocturna. Es feo, pero corre de punta a punta."],
-        rup:"RUP es iterativo: se programa desde Elaboración. Cada iteración entrega algo ejecutable que convierte un miedo en un dato."};
+      return {v:"ok", linea:"Software que corre y un riesgo convertido en dato.",
+        p:["La primera prueba tumba la web con 9 mil compradores. Rediseñas la cola virtual y aguanta 100 mil."],
+        rup:"RUP es iterativo: se programa desde Elaboración, y cada iteración entrega algo ejecutable."};
     }
   },
 
-  g2:{fase:2, hito:"LCA", corto:"hito LCA",
-    titulo:"Hito LCA: Arquitectura del Ciclo de Vida",
+  g2:{fase:2, hito:"LCA", corto:"hito LCA", pregunta:"¿Go o no-go?",
     presion:function(s){
-      var t="Los seis desarrolladores contratados para Construcción empiezan el lunes. Tenerlos esperando cuesta S/\u00a06 000 por semana.";
-      if(nivel(s.riesgo)==="alto") t+=" El viernes, una practicante prueba por su cuenta el diseño firmado: con 300 reservas simultáneas, el servidor se cae.";
+      var t="Los seis desarrolladores de Construcción empiezan el lunes.";
+      if(nivel(s.riesgo)==="alto") t+=" Una practicante probó el diseño firmado por su cuenta: con 5 mil compradores, se cae.";
       return t;},
     criterios:function(s){
-      var n=nivel(s.riesgo);
+      var n=nivel(s.riesgo), e=n==="bajo"?"si":(n==="medio"?"medio":"no");
       return [
-        [s.arq?"si":"no","Existe una arquitectura ejecutable", s.arq ? "Un esqueleto que corre de punta a punta." : (s.uml ? "Hay 43 diagramas firmados. Ejecutable, nada." : "Hay una prueba suelta, no una línea base.")],
-        [n==="bajo"?"si":(n==="medio"?"medio":"no"),"Los riesgos mayores están mitigados","Riesgo técnico: "+s.riesgo+"%."],
-        [n==="bajo"?"si":(n==="medio"?"medio":"no"),"El plan de Construcción es creíble", n==="bajo" ? "Se apoya en algo que ya se probó." : "Se apoya en supuestos que nadie ha probado."]];
+        [s.arq?"si":"no","Arquitectura ejecutable", s.arq ? "Un esqueleto que ya vende entradas de prueba." : (s.uml ? "43 diagramas firmados. Ejecutable, nada." : "Una simulación pequeña, no una línea base.")],
+        [e,"Riesgos mayores mitigados","Riesgo técnico: "+s.riesgo+"%."],
+        [e,"Plan de Construcción creíble", n==="bajo" ? "Se apoya en algo ya probado." : "Se apoya en supuestos."]];
     },
-    opciones:function(){return sellos([
-      "El lunes arranca Construcción con el equipo completo.",
-      "Otra iteración de Elaboración para programar y probar lo que falta. El equipo nuevo espera cobrando.",
-      "Se cierra el proyecto con lo aprendido y se devuelve el presupuesto que queda."],5,30);},
+    opciones:function(){return sellos(["El lunes arranca Construcción.","Otra iteración de Elaboración: programar y probar lo que falta.","Se cierra el proyecto con lo aprendido."],5,30);},
     resolver:function(s,id){
       var n=nivel(s.riesgo);
       s.gastoLCA=INI.pres-s.pres;
       if(id==="go"){
         if(n==="bajo"){ s.hitos.LCA="cumple";
           return {v:"ok", linea:"Aprobado con evidencia ejecutable.", sello:["LCA","aprobado"],
-            p:["Sellas LCA. El equipo de Construcción recibe un esqueleto que ya corre y una lista de riesgos tachados."],
-            rup:"LCA es el hito más importante de RUP: a partir de aquí el gasto se multiplica. Por eso se aprueba con evidencia ejecutable."};}
+            p:["Construcción recibe un esqueleto que ya corre y un riesgo tachado."],
+            rup:"LCA es el hito clave de RUP: desde aquí el gasto se multiplica, por eso exige evidencia ejecutable."};}
         s.hitos.LCA="sincumplir";
-        if(n==="medio") return {v:"error", linea:"Aprobado con riesgos abiertos.", sello:["LCA","aprobado"], rojo:true,
-          p:["Sellas LCA con dos riesgos sin tocar. \"Se resuelven en el camino\", dices. El camino tiene seis sueldos."],
-          rup:"Aprobar LCA con riesgos abiertos no los elimina: los manda a Construcción, donde cada semana cuesta seis sueldos."};
+        if(n==="medio") return {v:"error", linea:"Aprobado con el riesgo abierto.", sello:["LCA","aprobado"], rojo:true,
+          p:["\"Se resuelve en el camino\", dices. El camino tiene seis sueldos."],
+          rup:"Aprobar LCA con riesgo abierto no lo elimina: lo manda a Construcción, que es más cara."};
         return {v:"error", linea:"Aprobado sobre una arquitectura que nadie vio funcionar.", sello:["LCA","aprobado"], rojo:true,
-          p:["Sellas LCA. La practicante guarda su prueba en una carpeta.",
-             "El lunes llegan seis desarrolladores a construir sobre una arquitectura que nadie ha visto funcionar."],
-          rup:"Un hito es una condición. El comité firmó, la fecha llegó y el equipo está contratado, pero nada de eso es el criterio: arquitectura ejecutable y riesgo mitigado."};
+          p:["La practicante guarda su prueba en una carpeta. El lunes, seis personas empiezan a construir sobre un diagrama."],
+          rup:"El comité firmó y la fecha llegó, pero nada de eso es el criterio: arquitectura ejecutable y riesgo mitigado."};
       }
       if(id==="espera"){
         if(n!=="bajo"){ s.riesgo=Math.max(20,s.riesgo-35); s.arq=true; s.hitos.LCA="frenado";
           return {v:"ok", linea:"Frenaste y programaste lo que faltaba.", sello:["LCA","todavía no"],
-            p:["Cinco semanas programando el esqueleto que faltaba. La prueba de carga lo tumba dos veces antes de aguantar.",
-               "Duele pagar un equipo que espera. Pero ahora la arquitectura corre, y sellas LCA."],
+            p:["Cinco semanas programando y tumbando el esqueleto hasta que aguanta. Caro, pero ahora hay evidencia."],
             rup:"Una iteración más de Elaboración es cara. Descubrir lo mismo en Construcción cuesta varias veces más."};}
         s.hitos.LCA="sobra";
         return {v:"costo", linea:"Esperaste sin necesidad: cinco semanas y S/\u00a030 mil.", sello:["LCA","todavía no"],
-          p:["Cinco semanas puliendo una arquitectura que ya funcionaba, con seis desarrolladores cobrando por esperar. Luego sellas el mismo LCA."],
-          rup:"Si los criterios se cumplen, el hito se aprueba. La prudencia sin evidencia también cuesta."};
+          p:["Cinco semanas puliendo algo que ya funcionaba, con seis personas cobrando por esperar."],
+          rup:"Si la condición se cumple, el hito se aprueba. La prudencia sin evidencia también cuesta."};
       }
       s.hitos.LCA = n==="bajo" ? "nogo" : "nogobien";
       return {v: n==="alto"?"ok":(n==="medio"?"costo":"error"), linea: n==="alto" ? "No-go con la evidencia en la mano." : (n==="medio" ? "No-go prudente, quizá prematuro." : "Cancelaste un proyecto sano."),
         sello:["No-go","LCA"], rojo:n==="bajo", fin:"nogoLCA-"+n,
-        p:["Presentas la evidencia al vicerrector y cierras el proyecto."],
-        rup:"El no-go es una salida prevista del hito LCA, no un accidente. Es el último punto donde cancelar es barato."};
+        p:["Presentas la evidencia y cierras el proyecto."],
+        rup:"El no-go es una salida prevista del hito LCA: el último punto donde cancelar es barato."};
     }
   },
 
   d3:{fase:3, corto:"cómo construir",
-    titulo:"Seis desarrolladores y un comedor impaciente",
-    contexto:function(){return [
-      "Hay que construir reservas, QR, reportes diarios y el panel de Bienestar. El equipo está completo y el reloj corre.",
-      "¿Cómo organizas el trabajo?"];},
+    titulo:"Seis desarrolladores y una fecha de venta",
+    pregunta:"Construcción: ¿cómo se trabaja en RUP?",
+    contexto:function(){return ["Hay que construir cola virtual, pagos, entradas con QR y reportes. ¿Cómo organizas al equipo?"];},
     opciones:function(){return [
-      {id:"a", titulo:"Un módulo por pareja y se integra al final", texto:"Tres parejas en paralelo, cada una dueña de su módulo. Las últimas dos semanas se junta todo.", sem:10, mil:60},
-      {id:"b", titulo:"Iteraciones de tres semanas con el comedor probando", texto:"Cada iteración termina en una versión que funciona. El personal del comedor la usa y opina.", sem:12, mil:70},
-      {id:"c", titulo:"Iteraciones de tres semanas, puertas adentro", texto:"Versiones que funcionan cada tres semanas, pero los usuarios las ven recién al final. Menos interrupciones.", sem:11, mil:64}
+      {id:"a", titulo:"Un módulo por pareja y se integra al final", texto:"Todos avanzan en paralelo y se junta en las últimas dos semanas.", sem:10, mil:60},
+      {id:"b", titulo:"Iteraciones de tres semanas con ventas reales", texto:"Cada versión vende entradas de verdad para eventos chicos.", sem:12, mil:70},
+      {id:"c", titulo:"Iteraciones de tres semanas, puertas adentro", texto:"Versiones que funcionan, pero nadie de fuera las usa hasta el final.", sem:11, mil:64}
     ];},
     resolver:function(s,id){
       s.d3=id;
       var n=nivel(s.riesgo), r={p:[]};
       if(id==="a"){ s.plazo-=4; s.pres-=20; s.defectos+=2; r.v="error"; r.linea="Integración al final: cascada con otro nombre.";
-        r.p.push("Diez semanas de avance perfecto en tres tableros separados. Al juntar, el QR que genera un módulo no es el que espera el otro. La integración se come cuatro semanas y S/\u00a020 mil más.");
-        r.rup="Iterativo significa integrar en cada iteración. El \"todo al final\" es cascada con otro nombre.";
-      } else if(id==="b"){ r.v="ok"; r.linea="Cuatro iteraciones, cuatro versiones usadas por gente real.";
-        r.p.push("Cuatro iteraciones, cuatro versiones que corren. En la segunda, la señora Rosa, que valida en la puerta, pide que la pantalla se ponga roja si el QR ya se usó. Se hace en una tarde.");
-        r.rup="Cada iteración entrega software ejecutable y recoge opinión real. Así los requisitos se corrigen cuando todavía es barato.";
-      } else { s.defectos+=1; r.v="costo"; r.linea="Iteraciones sin usuarios: los problemas de uso aparecieron tarde.";
-        r.p.push("El equipo avanza sin interrupciones. Cuando por fin lo prueba el personal de la puerta, validar un QR toma cuatro toques y la cola vuelve a formarse. Hay que rehacer esa pantalla.");
-        r.rup="Software que corre es media iteración. La otra mitad es que alguien real lo use y diga qué falla.";
+        r.p.push("Al juntar, el QR que genera un módulo no es el que lee el otro. Integrar cuesta 4 semanas y S/\u00a020 mil más.");
+        r.rup="Iterativo significa integrar en cada iteración. \"Todo al final\" es cascada con otro nombre.";
+      } else if(id==="b"){ r.v="ok"; r.linea="Cuatro iteraciones usadas por compradores reales.";
+        r.p.push("Cuatro versiones, cuatro eventos chicos vendidos. Los compradores piden ver el precio final antes de pagar: se arregla en una tarde.");
+        r.rup="Cada iteración entrega software ejecutable y recoge opinión real, cuando corregir todavía es barato.";
+      } else { s.defectos+=1; r.v="costo"; r.linea="Iteraciones sin usuarios: los problemas aparecieron tarde.";
+        r.p.push("Todo corre. Pero cuando por fin lo usa gente real, nadie encuentra el botón de pagar. Hay que rehacer esa pantalla.");
+        r.rup="Software que corre es media iteración. La otra mitad es que alguien real lo use.";
       }
       if(n==="alto"){ s.plazo-=8; s.pres-=60; s.defectos+=1; s.riesgo=20; s.exploto=true; r.v="error";
-        r.p.push("Y en la semana cinco, la primera prueba con carga real tumba el servidor a las 400 reservas. La arquitectura firmada no aguanta. Rehacerla con seis personas en planilla cuesta ocho semanas y S/\u00a060 mil que no estaban en ningún plan.");
-        r.rup="Esto es lo que compra Elaboración. El mismo problema, descubierto antes del hito LCA, costaba una fracción. El riesgo que no se mitiga no desaparece: espera a que sea caro.";
+        r.p.push("Y en la semana cinco, la primera prueba de carga tumba la web con 5 mil compradores. Rehacer la arquitectura con seis personas en planilla: 8 semanas y S/\u00a060 mil.");
+        r.rup="Esto es lo que compra Elaboración: el riesgo que no se mitiga no desaparece, espera a que sea caro.";
         r.linea+=" Y el riesgo heredado de Elaboración explotó.";
       } else if(n==="medio"){ s.plazo-=6; s.pres-=40; s.defectos+=1; s.riesgo=15;
-        r.p.push("Además, los riesgos que pasaron LCA sin tocar aparecen ahora: el Wi-Fi de la puerta se cae y el padrón de 2009 no responde. Adaptar la arquitectura en plena construcción cuesta seis semanas y S/\u00a040 mil.");
-        r.linea+=" Los riesgos sin mitigar cobraron su parte.";
+        r.p.push("Además, la prueba a escala real muestra lo que la simulación pequeña no vio: 6 semanas y S/\u00a040 mil en ajustes.");
+        r.linea+=" El riesgo a medias cobró su parte.";
       } else { s.riesgo=10;
-        r.p.push("La arquitectura aguanta sin sorpresas: lo difícil ya se había resuelto en Elaboración.");
+        r.p.push("La arquitectura aguanta: lo difícil ya se resolvió en Elaboración.");
       }
       if(s.deudaAlcance){ s.plazo-=4; s.pres-=20;
-        r.p.push("Y Bienestar reclama el control de subsidio por categoría que \"siempre estuvo en el alcance\". Nadie lo acordó en Inicio, así que se negocia con el código a medio hacer: cuatro semanas y S/\u00a020 mil.");
+        r.p.push("Y la productora exige la reventa oficial que \"siempre estuvo incluida\": 4 semanas y S/\u00a020 mil.");
       }
       return r;
     }
   },
 
-  g3:{fase:3, hito:"IOC", corto:"hito IOC",
-    titulo:"Hito IOC: Capacidad Operativa Inicial",
-    presion:"El ciclo empieza pronto y el vicerrector ya mandó imprimir afiches con el QR de descarga.",
+  g3:{fase:3, hito:"IOC", corto:"hito IOC", pregunta:"¿Está listo para usuarios reales?",
+    presion:"La preventa del club de fans ya tiene fecha publicada.",
     criterios:function(s){
       var d=s.defectos;
       return [
-        [d===0?"si":"no","El producto es estable para usuarios reales", d===0 ? "Las pruebas integradas pasan limpias." : (d===1 ? "Quedan fallas serias abiertas." : "Se cae en las pruebas integradas.")],
-        ["si","Lo acordado en el alcance está construido","Reserva, QR y reporte diario."],
-        [s.d3==="b"?"si":"medio","Los usuarios están listos para una beta", s.d3==="b" ? "El personal del comedor lo usa desde la segunda iteración." : "El personal del comedor casi no lo ha usado."]];
+        [d===0?"si":"no","Estable para usuarios reales", d===0 ? "Las pruebas pasan limpias." : (d===1 ? "Quedan fallas serias abiertas." : "Se cae en las pruebas integradas.")],
+        ["si","Alcance construido","Cola virtual, pagos y QR."],
+        [s.d3==="b"?"si":"medio","Probado por gente real", s.d3==="b" ? "Cuatro eventos chicos vendidos." : "Casi nadie de fuera lo ha usado."]];
     },
     opciones:function(s){ var k=Math.max(1,s.defectos);
-      return sellos([
-        "Sale la beta con 150 estudiantes voluntarios.",
-        "Una iteración solo para estabilizar: nada nuevo, arreglar y volver a probar.",
-        "Se cierra el proyecto. Lo gastado, gastado está."],3*k,18*k);},
+      return sellos(["Sale la preventa: 3 mil entradas para el club de fans.","Una iteración solo para estabilizar y volver a probar.","Se cierra el proyecto. Lo gastado, gastado está."],3*k,18*k);},
     resolver:function(s,id){
       var d=s.defectos;
       if(id==="go"){
         if(d===0){ s.hitos.IOC="cumple";
           return {v:"ok", linea:"Beta con un producto estable.", sello:["IOC","aprobado"],
-            p:["Sellas IOC. La beta arranca con 150 voluntarios y lo peor que pasa es una queja por el color de un botón."],
-            rup:"IOC no pide perfección. Pide que el producto sea lo bastante estable para usuarios reales, aunque sea en beta."};}
+            p:["La preventa se agota en 12 minutos. La peor queja es por el color de un botón."],
+            rup:"IOC no pide perfección: pide estabilidad suficiente para usuarios reales, aunque sea en beta."};}
         s.hitos.IOC="sincumplir";
         if(d===1){ s.betaInestable=true;
           return {v:"error", linea:"Beta con fallas abiertas: se arreglaron con público.", sello:["IOC","aprobado"], rojo:true,
-            p:["Sellas IOC con fallas abiertas. En la beta, 150 voluntarios las encuentran todas en dos días y lo cuentan en el grupo de WhatsApp de la facultad.",
-               "Se arreglará en Transición, con los usuarios mirando."],
+            p:["Tres mil fans encuentran todas las fallas en una mañana y las publican con captura."],
             rup:"Aprobar IOC sin estabilidad traslada los defectos a Transición, donde cada falla tiene público."};}
         return {v:"error", linea:"Beta con un producto que se caía.", sello:["IOC","aprobado"], rojo:true, fin:"fracasoBeta",
-          p:["Sellas IOC porque los afiches ya están pegados."],
-          rup:"La fecha impresa en un afiche no vuelve estable a un producto. IOC es una condición."};
+          p:["Apruebas porque la fecha ya estaba publicada."],
+          rup:"Una fecha publicada no vuelve estable a un producto. IOC es una condición."};
       }
       if(id==="espera"){
         if(d>0){ s.defectos=0; s.riesgo=Math.max(5,s.riesgo-5); s.hitos.IOC="frenado";
           return {v:"ok", linea:"Frenaste para estabilizar antes de exponer a usuarios.", sello:["IOC","todavía no"],
-            p:["Nada nuevo: solo arreglar y volver a probar. Los afiches esperan en una caja. Al terminar, las pruebas integradas pasan limpias y sellas IOC."],
-            rup:"Una iteración de estabilización también es una iteración: termina en software ejecutable, mejor que el anterior."};}
+            p:["La preventa se mueve y los fans reclaman. Pero cuando sale, las pruebas pasan limpias."],
+            rup:"Estabilizar también es una iteración: termina en software ejecutable, mejor que el anterior."};}
         s.hitos.IOC="sobra";
         return {v:"costo", linea:"Esperaste sin necesidad: el producto ya era estable.", sello:["IOC","todavía no"],
-          p:["Tres semanas puliendo detalles que nadie había pedido. El producto ya era estable. Luego sellas el mismo IOC."],
-          rup:"IOC pide \"lo bastante estable\", no perfecto. Para pulir con usuarios reales existe la Transición."};
+          p:["Tres semanas puliendo lo que ya estaba estable."],
+          rup:"IOC pide \"lo bastante estable\", no perfecto. Para pulir con usuarios existe la Transición."};
       }
       s.hitos.IOC="nogo";
       return {v:"costo", linea:"No-go tardío: legítimo, pero caro.", sello:["No-go","IOC"], rojo:true, fin:"cancelIOC",
-        p:["Cierras el proyecto con casi todo el presupuesto ya gastado."],
-        rup:"El no-go siempre está disponible, pero su precio sube con cada fase. Por eso LCA es el hito donde más vale."};
+        p:["Cierras el proyecto con casi todo el presupuesto gastado."],
+        rup:"El no-go siempre está disponible, pero su precio sube con cada fase."};
     }
   },
 
-  g4:{fase:4, hito:"PR", corto:"hito PR",
-    titulo:"Hito PR: Lanzamiento del Producto",
-    presion:"Hoy empieza el ciclo. La app está publicada y los afiches, pegados. Para medio campus, eso ya es \"lanzado\".",
+  g4:{fase:4, hito:"PR", corto:"hito PR", pregunta:"¿Cuándo termina un proyecto?",
+    presion:"La venta general salió bien ayer. Para la productora, el proyecto ya terminó.",
     criterios:function(){return [
-      ["medio","Los usuarios están conformes","Todavía nadie les ha preguntado."],
-      ["medio","El soporte pasó a la OTI","Hoy, soporte es el celular de tu equipo."],
-      ["medio","El sistema anterior se retiró formalmente","El talonario de cartulina sigue en el cajón del concesionario."]];},
+      ["medio","Usuarios conformes","Nadie les ha preguntado."],
+      ["medio","Soporte transferido","Hoy, soporte es el celular de tu equipo."],
+      ["medio","Sistema anterior retirado","La web vieja sigue encendida."]];},
     opciones:function(s){ var x=s.betaInestable;
       return [
-        {id:"a", titulo:"Declarar el lanzamiento hoy", texto:"La app funciona y la fecha llegó. El equipo se disuelve el viernes, como estaba planeado.", sem:1, mil:5},
-        {id:"b", titulo:"Hacer la Transición completa", texto:"Dos semanas en paralelo con los tickets, capacitar al personal del comedor, entregar el soporte a la OTI con manual y guardia, y retirar la cartulina con resolución de Bienestar."+(x?" Incluye corregir las fallas que salieron en la beta.":""), sem:x?7:4, mil:x?45:25},
-        {id:"c", titulo:"Lanzar y dejar los tickets de cartulina por si acaso", texto:"Los dos sistemas conviven sin fecha de retiro. Si la app falla, nadie se queda sin almorzar.", sem:3, mil:15}
+        {id:"a", titulo:"Declarar el lanzamiento hoy", texto:"La venta ya ocurrió. El equipo se disuelve el viernes.", sem:1, mil:5},
+        {id:"b", titulo:"Hacer la Transición completa", texto:"Capacitar a atención al cliente, entregar el soporte a operaciones y apagar la web vieja."+(x?" Incluye corregir las fallas de la preventa.":""), sem:x?7:4, mil:x?45:25},
+        {id:"c", titulo:"Dejar la web vieja encendida por si acaso", texto:"Las dos conviven sin fecha de retiro.", sem:3, mil:15}
       ];},
     resolver:function(s,id){
       if(id==="a"){ s.hitos.PR="sincumplir";
         return {v:"error", linea:"Declaraste PR por la fecha, sin cumplir ningún criterio.", sello:["PR","declarado"], rojo:true, fin:"fracaso",
-          p:["Declaras PR. El lunes siguiente, la señora Rosa no sabe qué hacer cuando el lector no reconoce un QR. Llama a tu equipo. Tu equipo ya no existe. La OTI responde que a ellos nadie les entregó nada."],
-          rup:"PR no es publicar la app. Es que los usuarios estén conformes, el soporte transferido y el sistema anterior retirado."};}
+          p:["Declaras PR y el equipo se va."],
+          rup:"PR no es haber vendido: es usuarios conformes, soporte transferido y sistema anterior retirado."};}
       if(id==="b"){ s.hitos.PR="cumple"; s.riesgo=5;
-        return {v:"ok", linea:"Transición completa: usuarios conformes, soporte entregado, cartulina retirada.", sello:["PR","aprobado"],
+        return {v:"ok", linea:"Transición completa: usuarios conformes, soporte entregado, web vieja apagada.", sello:["PR","aprobado"],
           fin:(s.pres>=0&&s.plazo>=0)?"exito":"sobrecosto",
-          p:["Primero 150 voluntarios, después todo el campus, con los tickets todavía disponibles. El personal del comedor practica con QR de prueba. La OTI recibe manual, accesos y un turno de guardia.",
-             "El último talonario de cartulina se archiva con resolución de Bienestar."],
-          rup:"Transición también es iterativa y también programa: corrige, capacita y entrega. Termina cuando el sistema anterior ya no hace falta."};}
+          p:["Atención al cliente practica con casos reales, operaciones recibe manual y guardia, y la web vieja se apaga con acta."],
+          rup:"Transición también itera y programa. Termina cuando el sistema anterior ya no hace falta."};}
       s.hitos.PR="nunca";
       return {v:"costo", linea:"Dos sistemas para siempre: PR nunca se cumplió.", sello:["PR","pendiente"], rojo:true, fin:"amedias",
-        p:["La app funciona. Pero con cartulina disponible, la reventa sigue y el comedor lleva dos cuentas. Seis meses después, medio campus todavía hace cola a las 5:30 \"por costumbre\"."],
-        rup:"Mientras el sistema anterior siga vivo, el hito PR no se cumple. El proyecto no terminó: solo se quedó sin equipo."};
+        p:["Media clientela sigue comprando en la web vieja."],
+        rup:"Mientras el sistema anterior siga vivo, el hito PR no se cumple."};
     }
   }
 };
@@ -641,39 +627,33 @@ var TOTAL = 7;
 function desenlace(clave, s){
   var gastado=INI.pres-s.pres, usadas=INI.plazo-s.plazo;
   switch(clave){
-    case "exito": return {sello:["PR","aprobado"], titulo:"Cola Cero está en producción",
-      p:["A las 5:30\u00a0am ya no hay nadie en la puerta del comedor. Las reservas abren a las 6:00, se agotan en cuatro minutos y nadie revende nada.",
-         "Cerraste con S/\u00a0"+s.pres+" mil y "+s.plazo+" semanas de margen. Cada hito se aprobó cuando su condición se cumplía, no cuando llegaba su fecha."]};
-    case "sobrecosto": return {sello:["PR","con sobrecosto"], rojo:true, titulo:"Llegó a producción, pero alguien pagó la diferencia",
-      p:["El sistema funciona y la cola de las 5:30 desapareció. También desaparecieron "+(s.pres<0?"S/\u00a0"+(-s.pres)+" mil que no tenías":"")+(s.pres<0&&s.plazo<0?" y ":"")+(s.plazo<0?(-s.plazo)+" semanas que tampoco":"")+". La universidad cubrió el exceso recortando otro proyecto.",
-         "Revisa tus decisiones más abajo: casi siempre el sobrecosto nace en un hito que se aprobó antes de tiempo."]};
+    case "exito": return {sello:["PR","aprobado"], titulo:"Sold out, y la web no se cayó",
+      p:["A las 10:00 entraron 80 mil personas. A las 10:47 se agotaron las 45 mil entradas y nadie publicó una captura de error.",
+         "Te sobraron S/\u00a0"+s.pres+" mil y "+s.plazo+" semanas. Cada hito se aprobó cuando su condición se cumplía, no cuando llegaba su fecha."]};
+    case "sobrecosto": return {sello:["PR","con sobrecosto"], rojo:true, titulo:"Se vendió todo, pero alguien pagó la diferencia",
+      p:["La venta salió bien. También salieron "+(s.pres<0?"S/\u00a0"+(-s.pres)+" mil que no tenías":"")+(s.pres<0&&s.plazo<0?" y ":"")+(s.plazo<0?(-s.plazo)+" semanas de atraso":"")+". Revisa abajo qué hito aprobaste antes de tiempo."]};
     case "amedias": return {sello:["PR","pendiente"], rojo:true, titulo:"En producción, pero sin terminar",
-      p:["Cola Cero existe y funciona. La cola, la reventa y la doble contabilidad también. Nadie firmó nunca el retiro de la cartulina, así que el proyecto no tiene cierre: solo dejó de tener equipo."]};
+      p:["La web nueva funciona y la vieja también. Con dos inventarios, ya se vendió el mismo asiento dos veces. El proyecto no cerró: solo se quedó sin equipo."]};
     case "fracaso": return {sello:["PR","sin cumplir"], rojo:true, titulo:"Lanzado y abandonado",
-      p:["En la tercera semana, el lector de la puerta falla un día de lluvia y nadie sabe a quién llamar. El concesionario vuelve a los tickets de cartulina \"temporalmente\". Siguen ahí.",
-         "El software funcionaba. Lo que falló fue la Transición: usuarios sin capacitar, soporte sin dueño, sistema anterior sin retirar."]};
-    case "fracasoBeta": return {sello:["IOC","sin cumplir"], rojo:true, titulo:"El sistema cayó el primer lunes",
-      p:["A las 6:00\u00a0am, 2 400 estudiantes abren la app al mismo tiempo. A las 6:02 la app no responde. A las 6:40, el concesionario saca el talonario de cartulina del cajón y la cola se forma como siempre, pero más molesta.",
-         "El vicerrectorado congela el proyecto. Llegaste a usuarios reales con un producto que tus propias pruebas decían que se caía."]};
+      p:["Dos semanas después, un cobro doble afecta a 900 compradores. Atención al cliente no sabe qué hacer, operaciones dice que nadie le entregó nada, y tu equipo ya no existe.",
+         "El software funcionaba. Falló la Transición."]};
+    case "fracasoBeta": return {sello:["IOC","sin cumplir"], rojo:true, titulo:"La preventa se cayó a las 10:02",
+      p:["Tres mil fans, una pantalla de error y tendencia nacional antes del mediodía. La productora se lleva el concierto a otra ticketera.",
+         "Tus propias pruebas decían que se caía."]};
     case "nogoLCA-alto": return {sello:["No-go","a tiempo"], bueno:true, titulo:"No-go a tiempo: la mejor decisión del proyecto",
-      p:["Cancelaste con S/\u00a0"+gastado+" mil gastados y la evidencia en la mano: esa arquitectura no aguantaba. Seguir habría quemado los otros S/\u00a0"+s.pres+" mil con seis desarrolladores en planilla, para descubrir lo mismo en Construcción.",
-         "Bienestar usa lo aprendido para replantear el proyecto el próximo año, con otra arquitectura. Para esto existe el hito LCA: es el último punto donde cancelar es barato. No perdiste el proyecto; le ahorraste a la universidad el fracaso caro."]};
+      p:["Cancelaste con S/\u00a0"+gastado+" mil gastados y la evidencia en la mano: esa arquitectura no aguantaba. Seguir habría quemado los otros S/\u00a0"+s.pres+" mil para descubrirlo en Construcción o, peor, el día de la venta.",
+         "Para esto existe el hito LCA: es el último punto donde cancelar es barato. No perdiste el proyecto: le ahorraste a la empresa el fracaso caro."]};
     case "nogoLCA-medio": return {sello:["No-go","prudente"], bueno:true, titulo:"No-go prudente, quizá prematuro",
-      p:["Cancelaste con riesgos reales sin resolver, y eso es legítimo: nadie puede reprocharte no haber apostado S/\u00a0"+s.pres+" mil sobre supuestos.",
-         "Pero esos riesgos no eran fatales. Una iteración más de Elaboración probablemente los cerraba. Entre GO y NO-GO existe \"todavía no\"."]};
+      p:["Cancelar con el riesgo sin cerrar es legítimo. Pero no era fatal: una iteración más de Elaboración probablemente bastaba. Entre GO y NO-GO existe \"todavía no\"."]};
     case "nogoLCA-bajo": return {sello:["No-go","sin motivo"], rojo:true, titulo:"Cancelaste un proyecto sano",
-      p:["La arquitectura corría y los riesgos mayores estaban mitigados. El no-go es valioso cuando la evidencia lo pide; aquí la evidencia decía lo contrario.",
-         "La cola de las 5:30 sigue ahí."]};
+      p:["La arquitectura corría y el riesgo estaba mitigado. El no-go vale cuando la evidencia lo pide; aquí decía lo contrario."]};
     case "cancelLCO": return {sello:["No-go","en Inicio"], rojo:s.alineado, titulo:"Cancelado en Inicio",
-      p:[ s.alineado ? "Había alcance acordado y un caso de negocio que cerraba: unos S/\u00a09 000 al mes recuperados. Cancelar en LCO es barato y legítimo, pero aquí los criterios decían que sí valía la pena."
-                     : "Cancelaste sin alcance acordado ni caso de negocio: no sabías si valía la pena. El hito LCO existe justamente para averiguarlo antes de decidir.",
-          "Gastaste S/\u00a0"+gastado+" mil. La cola de las 5:30 sigue ahí."]};
+      p:[ s.alineado ? "Había alcance acordado y un caso de negocio que cerraba. Cancelar en LCO es barato y legítimo, pero aquí los criterios decían que sí valía la pena."
+                     : "Cancelaste sin alcance ni caso de negocio: no sabías si valía la pena. El hito LCO existe para averiguarlo antes de decidir."]};
     case "cancelIOC": return {sello:["No-go","tardío"], rojo:true, titulo:"Cancelado, pero tarde",
-      p:["Un no-go siempre es posible, pero su precio sube con cada fase. Cancelaste con S/\u00a0"+gastado+" mil gastados. En el hito LCA, la misma decisión costaba S/\u00a0"+s.gastoLCA+" mil.",
-         "Lo que sabes hoy sobre esa arquitectura se podía saber entonces, programando un esqueleto y probándolo."]};
-    default: return {sello:["Sin","fondos"], rojo:true, titulo:"La universidad cerró la llave",
-      p:["Llevas S/\u00a0"+gastado+" mil gastados y "+usadas+" semanas de trabajo, muy por encima de lo aprobado. El Consejo Universitario no autoriza la ampliación y el proyecto se detiene donde está.",
-         "El código queda en un repositorio que nadie volverá a abrir. Revisa más abajo en qué hito se trasladó un problema a la fase siguiente."]};
+      p:["El no-go siempre es posible, pero su precio sube con cada fase. Cancelaste con S/\u00a0"+gastado+" mil gastados. En el hito LCA, la misma decisión costaba S/\u00a0"+s.gastoLCA+" mil."]};
+    default: return {sello:["Sin","fondos"], rojo:true, titulo:"La empresa cerró la llave",
+      p:["Llevas S/\u00a0"+gastado+" mil gastados y "+usadas+" semanas, muy por encima de lo aprobado. El proyecto se detiene donde está. Revisa abajo en qué hito se trasladó un problema a la fase siguiente."]};
   }
 }
 
@@ -718,7 +698,8 @@ function pintarTalon(){
   });
 }
 
-function mostrar(html){
+function mostrar(html,clase){
+  cuerpo.className=clase||"";
   cuerpo.innerHTML=html;
   window.scrollTo(0,0);
   var h=cuerpo.querySelector("h1");
@@ -746,15 +727,37 @@ function barrido(f,luego){
 function portada(){
   S=nuevo(); paso=-1; document.body.setAttribute("data-fase",1); pintarTalon();
   mostrar(
-    '<p class="vale">Vale por un proyecto de software</p>'+
-    '<h1 class="titular">Cola Cero</h1>'+
-    '<p>600 raciones al día. Una cola que empieza a las 5:30\u00a0am. Tickets de cartulina que se revenden a S/\u00a05. Bienestar Universitario te nombra jefe del proyecto que lo va a arreglar: reservar desde el celular y validar con QR en la puerta del comedor.</p>'+
-    '<p>Llévalo por las cuatro fases de RUP. En cada hito, tú decides si el proyecto pasa, espera o se cancela.</p>'+
+    '<div class="portada"><div class="texto-p">'+
+    '<p class="vale">Entrada válida para dirigir un proyecto</p>'+
+    '<h1 class="titular">Sold <br class="corte">Out</h1>'+
+    '<p>El concierto del año. 45 mil entradas. 80 mil personas queriendo comprar a las 10:00\u00a0am en punto.</p>'+
+    '<p>La última vez, la web se cayó.</p>'+
     '<div class="tira" aria-hidden="true">'+
       FASES.slice(1).map(function(f,i){return '<div class="f'+(i+1)+'"><b>'+f.nombre+'</b><span>cierra con '+f.hito+'</span></div>';}).join("")+
     '</div>'+
-    '<button class="boton" id="ir">Empezar el proyecto</button> '+
-    '<span class="chico nota-boton" style="margin-left:12px">7 decisiones, unos 5 minutos</span>');
+    '<button class="boton" id="ir">Ver mi rol</button> '+
+    '<span class="chico nota-boton" style="margin-left:12px">Simulador de RUP. 7 decisiones, unos 5 minutos.</span>'+
+    '</div>'+CARTEL+'</div>', "ancho");
+  document.getElementById("ir").onclick=rol;
+}
+
+function rol(){
+  mostrar(
+    '<div class="meta"><span>Antes de empezar</span></div>'+
+    '<h1>Tu rol</h1>'+
+    '<dl class="rol">'+
+      '<div><dt>Quién eres</dt><dd>Diriges el proyecto de software de una ticketera.</dd></div>'+
+      '<div><dt>Qué te encargaron</dt><dd>Una web nueva que no se caiga cuando 80 mil personas compren a la vez.</dd></div>'+
+      '<div><dt>Por qué decides tú</dt><dd>El presupuesto y el plazo son tuyos, y son limitados. RUP parte el proyecto en 4 fases, y cada fase cierra con un hito que lleva tu firma.</dd></div>'+
+      '<div><dt>Qué decides en cada hito</dt><dd>Si el proyecto cumple los criterios, no si llegó la fecha. Tienes tres sellos:</dd></div>'+
+    '</dl>'+
+    '<ul class="tres-sellos" aria-label="Los tres sellos">'+
+      '<li><b>GO</b><span>pasa a la fase siguiente</span></li>'+
+      '<li><b>Todavía no</b><span>una iteración más, con costo</span></li>'+
+      '<li><b>NO-GO</b><span>se cancela el proyecto</span></li>'+
+    '</ul>'+
+    '<p class="chico">Tus tres números (presupuesto, plazo y riesgo técnico) están siempre a la vista.</p>'+
+    '<button class="boton" id="ir">Empezar el proyecto</button>');
   document.getElementById("ir").onclick=avanzar;
 }
 
@@ -789,7 +792,7 @@ function pantallaDecision(D){
     '<div class="meta"><span>Fase '+D.fase+' de 4, '+FASES[D.fase].nombre+'</span><span class="serie">Decisión Nº '+numDecision()+' de '+TOTAL+'</span></div>'+
     '<h1>'+(D.hito ? 'Hito '+D.hito : D.titulo)+'</h1>';
   if(D.hito){
-    html+='<p class="sub-hito">'+FASES[D.fase].hitoNombre+'. Así está tu proyecto hoy:</p>'+
+    html+='<p class="sub-hito">'+FASES[D.fase].hitoNombre+'. '+D.pregunta+'</p>'+
       '<ul class="criterios">'+D.criterios(S).map(function(c){
         var g=c[0]==="si"?"✓":(c[0]==="no"?"✗":"~"), lbl=c[0]==="si"?"Cumplido":(c[0]==="no"?"No cumplido":"Pendiente o a medias");
         return '<li class="'+c[0]+'"><span class="marca-c" role="img" aria-label="'+lbl+'">'+g+'</span><span>'+c[1]+'<em>'+c[2]+'</em></span></li>';}).join("")+'</ul>'+
@@ -801,7 +804,7 @@ function pantallaDecision(D){
         return '<button class="sello-btn" data-id="'+o.id+'"><b>'+o.titulo+'</b><span class="sub">'+o.sub+'</span><span class="texto">'+o.texto+'</span><span class="precio">'+costo(o).replace('<span class="sep">, </span><br>',", ")+'</span></button>';}).join("")+'</div>';
     }
   } else {
-    html+=parrafos(D.contexto(S))+cupones(ops);
+    html+='<p class="sub-hito" style="margin-bottom:14px">'+D.pregunta+'</p>'+parrafos(D.contexto(S))+cupones(ops);
   }
   mostrar(html);
   [].forEach.call(cuerpo.querySelectorAll("[data-id]"),function(b){
@@ -873,7 +876,7 @@ function pantallaFinal(clave){
     '</tbody></table></div>'+
 
     '<h2>Para discutir en clase</h2><ol class="debate">'+
-      '<li>¿Quién aprobó el hito LCA con el riesgo alto? ¿Qué pesó más: los 43 diagramas firmados o los seis desarrolladores esperando?</li>'+
+      '<li>¿Quién aprobó el hito LCA con el riesgo alto? ¿Qué pesó más: los 43 diagramas firmados o los seis desarrolladores que empezaban el lunes?</li>'+
       '<li>¿Alguien canceló el proyecto? ¿Se sintió como perder? ¿Qué dijo el juego?</li>'+
       '<li>¿En qué se diferencia "todavía no" de un simple retraso?</li>'+
       '<li>¿En qué decisión se parece más RUP a cascada si se aplica mal?</li>'+
